@@ -1,0 +1,6 @@
+@DepotDirectApi_HostAddress = http://localhost:5204
+
+GET {{DepotDirectApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
