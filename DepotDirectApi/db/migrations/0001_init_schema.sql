@@ -719,6 +719,127 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- added company to user id:
+-- use proper schema
+SET search_path = depotdirect, public;
+
+-- 1. Add company_id column to users (nullable) with FK
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='depotdirect' AND table_name='users' AND column_name='company_id'
+  ) THEN
+    ALTER TABLE depotdirect.users
+      ADD COLUMN company_id integer;
+  END IF;
+END$$;
+
+-- Add FK constraint if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'users_company_id_fkey' AND conrelid = 'depotdirect.users'::regclass
+  ) THEN
+    ALTER TABLE depotdirect.users
+      ADD CONSTRAINT users_company_id_fkey FOREIGN KEY (company_id) REFERENCES depotdirect.companies(id) ON DELETE SET NULL;
+  END IF;
+END$$;
+
+-- Add index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_users_company_id ON depotdirect.users (company_id);
+
+ALTER TABLE depotdirect.users OWNER TO depotdirect_user;
+
+-- 2. Validation trigger for user_regions: ensure region belongs to user's company
+
+-- Create or replace function
+CREATE OR REPLACE FUNCTION depotdirect.fn_validate_user_region_company()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  u_company_id integer;
+  exists_link boolean;
+BEGIN
+  -- For safety: if the table has no user_id/region_id, skip (defensive)
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='depotdirect' AND table_name=TG_TABLE_NAME AND column_name='user_id'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='depotdirect' AND table_name=TG_TABLE_NAME AND column_name='region_id'
+  ) THEN
+    RETURN NEW;
+  END IF;
+
+  -- Only validate on INSERT or UPDATE
+  IF TG_OP NOT IN ('INSERT','UPDATE') THEN
+    RETURN NEW;
+  END IF;
+
+  -- obtain user's company
+  SELECT company_id INTO u_company_id FROM depotdirect.users WHERE id = NEW.user_id;
+
+  -- If user doesn't exist, reject
+  IF u_company_id IS NULL THEN
+    RAISE EXCEPTION 'User % has no company assigned. Assign a company before mapping regions.', NEW.user_id;
+    -- Alternative: you may want to allow NULL company and skip validation; change behavior as needed.
+  END IF;
+
+  -- Check that the company is linked to that region via company_regions (non-deleted)
+  SELECT EXISTS (
+    SELECT 1 FROM depotdirect.company_regions cr
+    WHERE cr.company_id = u_company_id
+      AND cr.region_id = NEW.region_id
+      AND (cr.deleted_at IS NULL)
+  ) INTO exists_link;
+
+  IF NOT exists_link THEN
+    RAISE EXCEPTION 'Region % is not assigned to user''s company (company id %). Assign region to company first.', NEW.region_id, u_company_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+ALTER FUNCTION depotdirect.fn_validate_user_region_company() OWNER TO depotdirect_user;
+
+-- Attach trigger to user_regions table if not already attached
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'user_regions') THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_trigger WHERE tgname = 'trg_validate_user_regions_company'
+    ) THEN
+      CREATE TRIGGER trg_validate_user_regions_company
+        BEFORE INSERT OR UPDATE
+        ON depotdirect.user_regions
+        FOR EACH ROW
+        EXECUTE FUNCTION depotdirect.fn_validate_user_region_company();
+    END IF;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Optionally add active column to user_regions for soft delete pattern (if you want soft-deletes)
+-- (skip if you prefer physical deletes)
+-- ALTER TABLE depotdirect.user_regions ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
+
+-- 4. Optional: Backfill users.company_id from any existing assumptions.
+-- NOTE: This is manual and depends on your data. Example: if you can infer company from user email domain or existing site/company mappings you have.
+-- For manual backfill, run queries like:
+-- UPDATE depotdirect.users SET company_id = <company_id> WHERE id IN (...);
+
+-- 5. Grant ownership & index checks (defensive)
+ALTER TABLE IF EXISTS depotdirect.user_regions OWNER TO depotdirect_user;
+CREATE INDEX IF NOT EXISTS idx_user_regions_user ON depotdirect.user_regions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_regions_region ON depotdirect.user_regions (region_id);
+
+
+
+
+
+
 -- 4) sample: assign regions to a user (example)
 -- Replace <user_id> and <region_id> with actual ids
 -- INSERT INTO depotdirect.user_regions (user_id, region_id, created_by) VALUES (1, 2, 1) ON CONFLICT DO NOTHING;

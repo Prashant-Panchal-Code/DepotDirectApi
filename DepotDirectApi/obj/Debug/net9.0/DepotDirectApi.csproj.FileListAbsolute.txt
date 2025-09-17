@@ -45,3 +45,17 @@ D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\System.IdentityModel.To
 D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.Google.dll
 D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.MicrosoftAccount.dll
 D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.OpenIdConnect.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Caching.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Caching.Memory.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Configuration.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Logging.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Options.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.Extensions.Primitives.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Npgsql.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll

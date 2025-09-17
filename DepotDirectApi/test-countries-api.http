@@ -1,0 +1,72 @@
+### DepotDirect API - Countries Testing (Controller-Based)
+### Basic Authentication: admin:admin123
+
+### 1. Get all countries (Admin only) - Controller Route
+GET http://localhost:5204/api/admin/countries?page=1&pageSize=10
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 2. Get all countries with search (Admin only) - Controller Route
+GET http://localhost:5204/api/admin/countries?page=1&pageSize=10&search=united
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 3. Get country by ID (Admin only) - Controller Route
+GET http://localhost:5204/api/admin/countries/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 4. Create a new country (Admin only) - Controller Route
+POST http://localhost:5204/api/admin/countries
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "United States",
+  "isoCode": "US",
+  "metadata": {
+    "region": "North America",
+    "currency": "USD",
+    "language": "English"
+  }
+}
+
+### 5. Update a country (Admin only) - Controller Route
+PUT http://localhost:5204/api/admin/countries/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "United States of America",
+  "isoCode": "USA",
+  "metadata": {
+    "region": "North America",
+    "currency": "USD",
+    "language": "English",
+    "capital": "Washington D.C."
+  }
+}
+
+### 6. Delete a country (Admin only) - Controller Route
+DELETE http://localhost:5204/api/admin/countries/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 7. Test without authentication (should fail)
+GET http://localhost:5204/api/admin/countries
+
+### 8. Test with regular user authentication (should fail - admin required)
+GET http://localhost:5204/api/admin/countries
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 9. Get user profile (works with any authenticated user) - Controller Route
+GET http://localhost:5204/api/profile
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 10. Test login endpoint (minimal API - still works)
+POST http://localhost:5204/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 11. Test public status endpoint
+GET http://localhost:5204/public/status

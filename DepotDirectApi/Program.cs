@@ -1,14 +1,20 @@
-
 using DepotDirectApi.Authentication;
+using DepotDirectApi.Data;
 using DepotDirectApi.Models;
+using DepotDirectApi.Models.DTOs;
+using DepotDirectApi.Models.Entities;
+using DepotDirectApi.Repositories;
 using DepotDirectApi.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger to support Basic authentication only
@@ -45,12 +51,18 @@ builder.Services.AddSwaggerGen(c =>
 // Register authentication services
 builder.Services.AddScoped<IUserService, InMemoryUserService>();
 
+// Configure PostgreSQL Database
+builder.Services.AddDbContext<DepotDirectDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DepotDirect")));
+
+// Register repositories
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+
 // Configure Basic Authentication only
 builder.Services.AddAuthentication("Basic")
     .AddScheme<BasicAuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
 
 builder.Services.AddAuthorization();
-
 
 var app = builder.Build();
 
@@ -70,7 +82,7 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-// Authentication endpoints
+// Authentication endpoints (keeping as minimal API for simplicity)
 app.MapPost("/auth/login", async (LoginRequest request, IUserService userService) =>
 {
     if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
@@ -108,7 +120,7 @@ app.MapPost("/auth/login", async (LoginRequest request, IUserService userService
 .WithName("Login")
 .WithOpenApi();
 
-// Protected endpoint - requires authentication
+// Demo weather endpoint
 app.MapGet("/weatherforecast", () =>
 {
     var forecast = Enumerable.Range(1, 5).Select(index =>
@@ -122,49 +134,15 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast")
-.RequireAuthorization();
-
-// Public endpoint - no authentication required
-app.MapGet("/public/status", () => new { Status = "API is running", Timestamp = DateTime.UtcNow })
-.WithName("GetPublicStatus")
 .WithOpenApi();
 
-// Admin-only endpoint - requires Admin role
-app.MapGet("/admin/users", (IUserService userService) =>
-{
-    // In a real implementation, you'd get all users from the service
-    return Results.Ok(new { Message = "This is an admin-only endpoint", Timestamp = DateTime.UtcNow });
-})
-.WithName("GetUsers")
-.RequireAuthorization(policy => policy.RequireRole("Admin"));
+// Public status endpoint
+app.MapGet("/public/status", () => new { Status = "API is running", Timestamp = DateTime.UtcNow })
+    .WithName("GetStatus")
+    .WithOpenApi();
 
-// User profile endpoint - requires authentication
-app.MapGet("/profile", async (IUserService userService, ClaimsPrincipal user) =>
-{
-    var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-    {
-        return Results.BadRequest("Invalid user ID");
-    }
-
-    var userProfile = await userService.GetUserByIdAsync(userId);
-    if (userProfile == null)
-    {
-        return Results.NotFound("User not found");
-    }
-
-    var profile = new UserInfo
-    {
-        Id = userProfile.Id,
-        Username = userProfile.Username,
-        Email = userProfile.Email,
-        Roles = userProfile.Roles
-    };
-
-    return Results.Ok(profile);
-})
-.WithName("GetProfile")
-.RequireAuthorization();
+// Map all controllers
+app.MapControllers();
 
 app.Run();
 
@@ -172,3 +150,6 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+// Login request model
+record LoginRequest(string Username, string Password);
