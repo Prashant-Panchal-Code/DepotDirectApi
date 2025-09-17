@@ -1,0 +1,64 @@
+# DepotDirect API Authentication Test
+
+This file contains test requests for the DepotDirect API authentication functionality.
+
+### 1. Test Public Endpoint (No Auth Required)
+GET http://localhost:5204/public/status
+
+### 2. Test Login with Valid Credentials (admin)
+POST http://localhost:5204/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 3. Test Login with Valid Credentials (user)
+POST http://localhost:5204/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+### 4. Test Login with Invalid Credentials
+POST http://localhost:5204/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+
+### 5. Test Protected Endpoint with Basic Auth (admin)
+GET http://localhost:5204/weatherforecast
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 6. Test Protected Endpoint with Basic Auth (user)
+GET http://localhost:5204/weatherforecast
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 7. Test Protected Endpoint without Auth (should fail)
+GET http://localhost:5204/weatherforecast
+
+### 8. Get User Profile with Basic Auth
+GET http://localhost:5204/profile
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 9. Test Admin Endpoint with Admin User (Basic Auth)
+GET http://localhost:5204/admin/users
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 10. Test Admin Endpoint with Regular User (should fail)
+GET http://localhost:5204/admin/users
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 11. Test Protected Endpoint with JWT Token (get token from login first)
+GET http://localhost:5204/weatherforecast
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 12. Test Profile with JWT Token
+GET http://localhost:5204/profile
+Authorization: Bearer YOUR_JWT_TOKEN_HERE

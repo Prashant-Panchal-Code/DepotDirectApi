@@ -1,0 +1,55 @@
+# DepotDirect API - Basic Authentication Tests
+
+This file contains test requests for the simplified DepotDirect API with Basic Authentication only.
+
+### Test Credentials
+- **Admin User:** username: `admin`, password: `admin123` (Base64: `YWRtaW46YWRtaW4xMjM=`)
+- **Regular User:** username: `user`, password: `user123` (Base64: `dXNlcjp1c2VyMTIz`)
+
+### 1. Test Public Endpoint (No Auth Required)
+GET http://localhost:5205/public/status
+
+### 2. Test Login Endpoint (Validates Credentials)
+POST http://localhost:5205/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 3. Test Login with Invalid Credentials
+POST http://localhost:5205/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+
+### 4. Test Protected Endpoint with Basic Auth (Admin)
+GET http://localhost:5205/weatherforecast
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 5. Test Protected Endpoint with Basic Auth (User)
+GET http://localhost:5205/weatherforecast
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 6. Test Protected Endpoint without Auth (should fail)
+GET http://localhost:5205/weatherforecast
+
+### 7. Get User Profile with Basic Auth (Admin)
+GET http://localhost:5205/profile
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 8. Get User Profile with Basic Auth (User)
+GET http://localhost:5205/profile
+Authorization: Basic dXNlcjp1c2VyMTIz
+
+### 9. Test Admin Endpoint with Admin User (should work)
+GET http://localhost:5205/admin/users
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 10. Test Admin Endpoint with Regular User (should fail - 403 Forbidden)
+GET http://localhost:5205/admin/users
+Authorization: Basic dXNlcjp1c2VyMTIz

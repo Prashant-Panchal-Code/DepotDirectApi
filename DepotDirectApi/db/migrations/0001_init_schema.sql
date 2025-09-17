@@ -681,6 +681,50 @@ ALTER SEQUENCE IF EXISTS depotdirect.parking_companies_id_seq OWNER TO depotdire
 ALTER SEQUENCE IF EXISTS depotdirect.roles_id_seq OWNER TO depotdirect_user;
 ALTER SEQUENCE IF EXISTS depotdirect.users_id_seq OWNER TO depotdirect_user;
 
+
+-- ensure we are in correct schema
+SET search_path = depotdirect, public;
+
+-- 1) create sequence & table (idempotent)
+CREATE SEQUENCE IF NOT EXISTS depotdirect.user_regions_id_seq START 1;
+
+CREATE TABLE IF NOT EXISTS depotdirect.user_regions (
+  id integer PRIMARY KEY DEFAULT nextval('depotdirect.user_regions_id_seq'),
+  user_id integer NOT NULL REFERENCES depotdirect.users(id) ON DELETE CASCADE,
+  region_id integer NOT NULL REFERENCES depotdirect.regions(id) ON DELETE CASCADE,
+  created_by integer,                -- user id who created this mapping
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  UNIQUE (user_id, region_id)
+);
+
+ALTER TABLE depotdirect.user_regions OWNER TO depotdirect_user;
+
+-- 2) indexes
+CREATE INDEX IF NOT EXISTS idx_user_regions_user ON depotdirect.user_regions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_regions_region ON depotdirect.user_regions (region_id);
+
+-- 3) triggers: updated_at + soft-delete
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_set_updated_at_user_regions') THEN
+    CREATE TRIGGER trg_set_updated_at_user_regions BEFORE UPDATE ON depotdirect.user_regions FOR EACH ROW EXECUTE FUNCTION depotdirect.fn_set_updated_at();
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_soft_delete_user_regions') THEN
+    CREATE TRIGGER trg_soft_delete_user_regions BEFORE DELETE ON depotdirect.user_regions FOR EACH ROW EXECUTE FUNCTION depotdirect.fn_soft_delete();
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 4) sample: assign regions to a user (example)
+-- Replace <user_id> and <region_id> with actual ids
+-- INSERT INTO depotdirect.user_regions (user_id, region_id, created_by) VALUES (1, 2, 1) ON CONFLICT DO NOTHING;
+
+
+
 -- =====================================================================
 -- 8. Quick examples (copy-paste)
 -- =====================================================================

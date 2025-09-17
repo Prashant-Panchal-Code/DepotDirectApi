@@ -33,3 +33,15 @@ d:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\ref\DepotDirectApi.dll
 d:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
 d:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 d:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+d:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\DepotDirectApi.sourcelink.json
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.Google.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.MicrosoftAccount.dll
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.OpenIdConnect.dll
