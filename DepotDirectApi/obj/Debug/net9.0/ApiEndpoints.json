@@ -1,5 +1,192 @@
 [
   {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "GetAllCompanies",
+    "RelativePath": "api/admin/Companies",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.CompanyListItemDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "CreateCompany",
+    "RelativePath": "api/admin/Companies",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "createCompanyDto",
+        "Type": "DepotDirectApi.Models.DTOs.CreateCompanyDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.CompanyResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "GetCompany",
+    "RelativePath": "api/admin/Companies/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.CompanyResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "UpdateCompany",
+    "RelativePath": "api/admin/Companies/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "updateCompanyDto",
+        "Type": "DepotDirectApi.Models.DTOs.UpdateCompanyDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.CompanyResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "DeleteCompany",
+    "RelativePath": "api/admin/Companies/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "CompanyExists",
+    "RelativePath": "api/admin/Companies/{id}",
+    "HttpMethod": "HEAD",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "GetCompaniesByCountry",
+    "RelativePath": "api/admin/Companies/by-country/{countryId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "countryId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.CompanyListItemDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.CompaniesController",
+    "Method": "SearchCompanies",
+    "RelativePath": "api/admin/Companies/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "searchTerm",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.CompanyListItemDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "DepotDirectApi.Controllers.Admin.CountriesController",
     "Method": "GetCountries",
     "RelativePath": "api/admin/Countries",
