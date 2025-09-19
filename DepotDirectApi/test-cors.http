@@ -1,0 +1,51 @@
+### CORS Testing for DepotDirect API
+### Test CORS functionality from different localhost origins
+
+### 1. Test simple OPTIONS request (CORS preflight)
+OPTIONS http://localhost:5204/api/admin/countries
+Origin: http://localhost:3000
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization
+
+### 2. Test GET request with Origin header (simulating React app on port 3000)
+GET http://localhost:5204/api/admin/countries/with-stats
+Origin: http://localhost:3000
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 3. Test GET request with Origin header (simulating Angular app on port 4200)
+GET http://localhost:5204/api/admin/countries
+Origin: http://localhost:4200
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 4. Test POST request with Origin header (simulating Vue app on port 8080)
+POST http://localhost:5204/api/admin/countries
+Origin: http://localhost:8080
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "Test Country",
+  "isoCode": "TC",
+  "metadata": {
+    "test": "cors"
+  }
+}
+
+### 5. Test with 127.0.0.1 origin (alternative localhost format)
+GET http://localhost:5204/api/admin/countries
+Origin: http://127.0.0.1:3000
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 6. Test public endpoint (no auth required)
+GET http://localhost:5204/public/status
+Origin: http://localhost:3000
+
+### 7. Test login endpoint with CORS
+POST http://localhost:5204/auth/login
+Origin: http://localhost:3000
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}

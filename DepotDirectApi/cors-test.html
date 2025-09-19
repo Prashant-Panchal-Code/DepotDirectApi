@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DepotDirect API CORS Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 DepotDirect API CORS Test</h1>
+    <p>This page tests CORS functionality for the DepotDirect API running on <code>http://localhost:5204</code></p>
+
+    <div class="test-section">
+        <h3>📊 Test 1: Get Countries with Statistics (Admin)</h3>
+        <p>Tests: CORS headers, Authentication, Data retrieval</p>
+        <button onclick="testCountriesWithStats()">Test Countries with Stats</button>
+        <div id="countries-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🏠 Test 2: Get Countries (Simple)</h3>
+        <p>Tests: Basic CORS functionality</p>
+        <button onclick="testCountries()">Test Countries</button>
+        <div id="simple-countries-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔓 Test 3: Public Status (No Auth)</h3>
+        <p>Tests: CORS without authentication</p>
+        <button onclick="testPublicStatus()">Test Public Status</button>
+        <div id="status-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔐 Test 4: Login</h3>
+        <p>Tests: CORS with POST requests</p>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5204';
+        const ADMIN_AUTH = 'Basic YWRtaW46YWRtaW4xMjM='; // admin:admin123
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    credentials: 'include' // Important for CORS with auth
+                });
+                
+                const responseData = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: null
+                };
+
+                try {
+                    responseData.data = await response.json();
+                } catch (e) {
+                    responseData.data = await response.text();
+                }
+
+                return responseData;
+            } catch (error) {
+                return {
+                    error: error.message,
+                    type: error.name
+                };
+            }
+        }
+
+        async function testCountriesWithStats() {
+            const resultDiv = document.getElementById('countries-result');
+            resultDiv.textContent = 'Testing...';
+            
+            const result = await makeRequest(`${API_BASE}/api/admin/countries/with-stats`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': ADMIN_AUTH,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = result.error ? 'result error' : 'result success';
+        }
+
+        async function testCountries() {
+            const resultDiv = document.getElementById('simple-countries-result');
+            resultDiv.textContent = 'Testing...';
+            
+            const result = await makeRequest(`${API_BASE}/api/admin/countries`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': ADMIN_AUTH,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = result.error ? 'result error' : 'result success';
+        }
+
+        async function testPublicStatus() {
+            const resultDiv = document.getElementById('status-result');
+            resultDiv.textContent = 'Testing...';
+            
+            const result = await makeRequest(`${API_BASE}/public/status`, {
+                method: 'GET'
+            });
+
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = result.error ? 'result error' : 'result success';
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.textContent = 'Testing...';
+            
+            const result = await makeRequest(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                })
+            });
+
+            resultDiv.textContent = JSON.stringify(result, null, 2);
+            resultDiv.className = result.error ? 'result error' : 'result success';
+        }
+
+        // Auto-run status test on page load
+        window.addEventListener('load', () => {
+            testPublicStatus();
+        });
+    </script>
+</body>
+</html>

@@ -17,6 +17,42 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// Configure CORS to allow localhost origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:3000",    // React default
+            "http://localhost:3001",    // React alternative
+            "http://localhost:4200",    // Angular default
+            "http://localhost:5000",    // .NET default
+            "http://localhost:5001",    // .NET HTTPS
+            "http://localhost:8080",    // Vue default
+            "http://localhost:8081",    // Vue alternative
+            "http://127.0.0.1:3000",    // Alternative localhost format
+            "http://127.0.0.1:4200",
+            "http://127.0.0.1:8080"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+    
+    // Optional: Add a more permissive policy for development
+    options.AddPolicy("AllowAllLocalhost", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+        {
+            var uri = new Uri(origin);
+            return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
+
 // Configure Swagger to support Basic authentication only
 builder.Services.AddSwaggerGen(c =>
 {
@@ -71,6 +107,9 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+// Add CORS middleware (must be before authentication)
+app.UseCors("AllowAllLocalhost");
 
 // Add authentication and authorization middleware
 app.UseAuthentication();
@@ -135,11 +174,6 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
-
-// Public status endpoint
-app.MapGet("/public/status", () => new { Status = "API is running", Timestamp = DateTime.UtcNow })
-    .WithName("GetStatus")
-    .WithOpenApi();
 
 // Map all controllers
 app.MapControllers();

@@ -14,4 +14,5 @@ public interface ICountryRepository
     Task<bool> ExistsByNameAsync(string name, int? excludeId = null);
     Task<bool> ExistsByIsoCodeAsync(string isoCode, int? excludeId = null);
     Task<CountryWithStatsDto?> GetWithStatsAsync(int id);
+    Task<List<CountryWithStatsDto>> GetAllWithStatsAsync();
 }

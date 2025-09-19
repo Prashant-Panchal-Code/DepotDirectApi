@@ -2,6 +2,7 @@ using DepotDirectApi.Data;
 using DepotDirectApi.Models.DTOs;
 using DepotDirectApi.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace DepotDirectApi.Repositories;
 
@@ -142,5 +143,33 @@ public class CountryRepository : ICountryRepository
             .FirstOrDefaultAsync();
 
         return country;
+    }
+
+    public async Task<List<CountryWithStatsDto>> GetAllWithStatsAsync()
+    {
+        var countries = await _context.Countries
+            .Where(c => c.DeletedAt == null)
+            .Include(c => c.Companies.Where(co => co.DeletedAt == null))
+            .Include(c => c.Regions.Where(r => r.DeletedAt == null))
+            .Include(c => c.Depots.Where(d => d.DeletedAt == null))
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+        var result = countries.Select(c => new CountryWithStatsDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            IsoCode = c.IsoCode,
+            Metadata = c.Metadata != null ? JsonSerializer.Deserialize<object>(c.Metadata.RootElement.GetRawText()) : null,
+            CreatedAt = c.CreatedAt,
+            UpdatedAt = c.UpdatedAt,
+            CreatedBy = c.CreatedBy,
+            LastUpdatedBy = c.LastUpdatedBy,
+            CompaniesCount = c.Companies.Count,
+            RegionsCount = c.Regions.Count,
+            DepotsCount = c.Depots.Count
+        }).ToList();
+
+        return result;
     }
 }

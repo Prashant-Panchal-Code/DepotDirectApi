@@ -2,11 +2,11 @@
 ### Basic Authentication: admin:admin123
 
 ### 1. Get all countries (Admin only) - Controller Route
-GET http://localhost:5204/api/admin/countries?page=1&pageSize=10
+GET http://localhost:5204/api/admin/countries
 Authorization: Basic YWRtaW46YWRtaW4xMjM=
 
-### 2. Get all countries with search (Admin only) - Controller Route
-GET http://localhost:5204/api/admin/countries?page=1&pageSize=10&search=united
+### 2. Get all countries with statistics (Admin only) - Controller Route
+GET http://localhost:5204/api/admin/countries/with-stats
 Authorization: Basic YWRtaW46YWRtaW4xMjM=
 
 ### 3. Get country by ID (Admin only) - Controller Route

@@ -24,58 +24,63 @@ namespace DepotDirectApi.Controllers.Admin
         }
 
         /// <summary>
-        /// Get all countries with pagination and optional search
+        /// Get all countries
         /// </summary>
-        /// <param name="page">Page number (default: 1)</param>
-        /// <param name="pageSize">Items per page (default: 50, max: 100)</param>
-        /// <param name="search">Search term for country name</param>
-        /// <returns>Paginated list of countries</returns>
+        /// <returns>List of all countries</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(PagedResult<CountryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<CountryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<ActionResult<PagedResult<CountryDto>>> GetCountries(
-            [FromQuery] int page = 1, 
-            [FromQuery] int pageSize = 50, 
-            [FromQuery] string? search = null)
+        public async Task<ActionResult<List<CountryDto>>> GetCountries()
         {
             try
             {
-                // Validate pagination parameters
-                if (page < 1) page = 1;
-                if (pageSize < 1) pageSize = 50;
-                if (pageSize > 100) pageSize = 100;
-
-                var result = await _countryRepository.GetAllAsync(page, pageSize, search);
+                // Get all countries without pagination or search
+                var result = await _countryRepository.GetAllAsync(1, int.MaxValue, null);
                 
-                var response = new PagedResult<CountryDto>
+                var response = result.Data.Select(c => new CountryDto
                 {
-                    Data = result.Data.Select(c => new CountryDto
-                    {
-                        Id = c.Id,
-                        Name = c.Name,
-                        IsoCode = c.IsoCode,
-                        Metadata = c.Metadata != null ? JsonSerializer.Deserialize<object>(c.Metadata.RootElement.GetRawText()) : null,
-                        CreatedAt = c.CreatedAt,
-                        UpdatedAt = c.UpdatedAt,
-                        CreatedBy = c.CreatedBy,
-                        LastUpdatedBy = c.LastUpdatedBy
-                    }).ToList(),
-                    TotalCount = result.TotalCount,
-                    Page = result.Page,
-                    PageSize = result.PageSize,
-                    TotalPages = result.TotalPages,
-                    HasNextPage = result.HasNextPage,
-                    HasPreviousPage = result.HasPreviousPage
-                };
+                    Id = c.Id,
+                    Name = c.Name,
+                    IsoCode = c.IsoCode,
+                    Metadata = c.Metadata != null ? JsonSerializer.Deserialize<object>(c.Metadata.RootElement.GetRawText()) : null,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                    CreatedBy = c.CreatedBy,
+                    LastUpdatedBy = c.LastUpdatedBy
+                }).ToList();
 
-                _logger.LogInformation("Retrieved {Count} countries for page {Page}", response.Data.Count, page);
+                _logger.LogInformation("Retrieved {Count} countries", response.Count);
                 return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving countries");
                 return StatusCode(500, "An error occurred while retrieving countries");
+            }
+        }
+
+        /// <summary>
+        /// Get all countries with company and region counts
+        /// </summary>
+        /// <returns>List of all countries with statistics</returns>
+        [HttpGet("with-stats")]
+        [ProducesResponseType(typeof(List<CountryWithStatsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult<List<CountryWithStatsDto>>> GetCountriesWithStats()
+        {
+            try
+            {
+                var result = await _countryRepository.GetAllWithStatsAsync();
+                
+                _logger.LogInformation("Retrieved {Count} countries with stats", result.Count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving countries with stats");
+                return StatusCode(500, "An error occurred while retrieving countries with statistics");
             }
         }
 
