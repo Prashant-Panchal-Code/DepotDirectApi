@@ -94,6 +94,9 @@ builder.Services.AddDbContext<DepotDirectDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IRegionRepository, RegionRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Configure Basic Authentication only
 builder.Services.AddAuthentication("Basic")

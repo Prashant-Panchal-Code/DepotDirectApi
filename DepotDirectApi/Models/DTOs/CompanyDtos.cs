@@ -66,3 +66,17 @@ public class CompanyListItemDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class CompanyDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? CompanyCode { get; set; }
+    public int CountryId { get; set; }
+    public string? Description { get; set; }
+    public object? Metadata { get; set; }
+    public int? CreatedBy { get; set; }
+    public int? LastUpdatedBy { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

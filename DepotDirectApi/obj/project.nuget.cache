@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "05nG8HTRuYY=",
+  "dgSpecHash": "+EQWrfgPBJY=",
   "success": true,
   "projectFilePath": "D:\\source\\DepotDirectApi\\DepotDirectApi\\DepotDirectApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Prashant\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Prashant\\.nuget\\packages\\microsoft.aspnetcore.authentication\\2.3.0\\microsoft.aspnetcore.authentication.2.3.0.nupkg.sha512",
     "C:\\Users\\Prashant\\.nuget\\packages\\microsoft.aspnetcore.authentication.abstractions\\2.3.0\\microsoft.aspnetcore.authentication.abstractions.2.3.0.nupkg.sha512",
     "C:\\Users\\Prashant\\.nuget\\packages\\microsoft.aspnetcore.authentication.core\\2.3.0\\microsoft.aspnetcore.authentication.core.2.3.0.nupkg.sha512",

@@ -14,4 +14,5 @@ public interface ICompanyRepository
     Task<bool> ExistsByCodeAndCountryAsync(string companyCode, int countryId, int? excludeId = null);
     Task<IEnumerable<CompanyListItemDto>> GetByCountryIdAsync(int countryId);
     Task<IEnumerable<CompanyListItemDto>> SearchAsync(string searchTerm);
+    Task<IEnumerable<RegionListItemDto>> GetRegionsByCompanyIdAsync(int companyId);
 }

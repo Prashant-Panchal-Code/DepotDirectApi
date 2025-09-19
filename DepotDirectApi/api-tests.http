@@ -62,3 +62,160 @@ Authorization: Bearer YOUR_JWT_TOKEN_HERE
 ### 12. Test Profile with JWT Token
 GET http://localhost:5204/profile
 Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+##################################################
+# COUNTRIES API TESTS
+##################################################
+
+### 13. Get all countries
+GET http://localhost:5204/api/admin/countries
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 14. Get a specific country by ID
+GET http://localhost:5204/api/admin/countries/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 15. Create a new country
+POST http://localhost:5204/api/admin/countries
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "United States",
+  "isoCode": "US",
+  "metadata": {}
+}
+
+### 16. Update a country
+PUT http://localhost:5204/api/admin/countries/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "India Updated",
+  "isoCode": "IN",
+  "metadata": {}
+}
+
+### 17. Search countries
+GET http://localhost:5204/api/admin/countries/search?query=india
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+##################################################
+# COMPANIES API TESTS
+##################################################
+
+### 18. Get all companies
+GET http://localhost:5204/api/admin/companies
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 19. Get a specific company by ID
+GET http://localhost:5204/api/admin/companies/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 20. Create a new company
+POST http://localhost:5204/api/admin/companies
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "Test Company Ltd",
+  "companyCode": "TEST001",
+  "countryId": 1,
+  "description": "A test company for API validation",
+  "metadata": {}
+}
+
+### 21. Update a company
+PUT http://localhost:5204/api/admin/companies/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "Updated Company Name",
+  "description": "Updated description",
+  "metadata": {}
+}
+
+### 22. Get companies by country
+GET http://localhost:5204/api/admin/companies/by-country/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 23. Search companies
+GET http://localhost:5204/api/admin/companies/search?searchTerm=acme
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 24. Get regions assigned to a company
+GET http://localhost:5204/api/admin/companies/1/regions
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+##################################################
+# REGIONS API TESTS
+##################################################
+
+### 25. Get all regions
+GET http://localhost:5204/api/admin/regions
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 26. Get a specific region by ID
+GET http://localhost:5204/api/admin/regions/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 27. Create a new region
+POST http://localhost:5204/api/admin/regions
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "Tamil Nadu",
+  "regionCode": "TN",
+  "countryId": 1,
+  "metadata": {}
+}
+
+### 28. Update a region
+PUT http://localhost:5204/api/admin/regions/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+{
+  "name": "Karnataka Updated",
+  "regionCode": "KA",
+  "metadata": {}
+}
+
+### 29. Get regions by country
+GET http://localhost:5204/api/admin/regions/by-country/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 30. Search regions
+GET http://localhost:5204/api/admin/regions/search?query=karnataka
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+##################################################
+# COMPANY-REGION RELATIONSHIP TESTS
+##################################################
+
+### 31. Assign a region to a company
+POST http://localhost:5204/api/admin/regions/1/companies/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 32. Get companies assigned to a region
+GET http://localhost:5204/api/admin/regions/1/companies
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 33. Get regions assigned to a company (alternative endpoint)
+GET http://localhost:5204/api/admin/regions/by-company/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 34. Check if a region is assigned to a company
+GET http://localhost:5204/api/admin/regions/1/companies/1/is-assigned
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 35. Remove a region from a company
+DELETE http://localhost:5204/api/admin/regions/1/companies/1
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+
+### 36. Delete a region (soft delete)
+DELETE http://localhost:5204/api/admin/regions/2
+Authorization: Basic YWRtaW46YWRtaW4xMjM=

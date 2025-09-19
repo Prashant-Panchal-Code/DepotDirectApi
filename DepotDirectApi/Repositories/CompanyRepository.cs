@@ -237,4 +237,24 @@ public class CompanyRepository : ICompanyRepository
             .OrderBy(c => c.Name)
             .ToListAsync();
     }
+
+    // Region relationship methods - regions now belong directly to companies
+    public async Task<IEnumerable<RegionListItemDto>> GetRegionsByCompanyIdAsync(int companyId)
+    {
+        return await _context.Regions
+            .Where(r => r.CompanyId == companyId && r.DeletedAt == null)
+            .Include(r => r.Company)
+            .Select(r => new RegionListItemDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                RegionCode = r.RegionCode,
+                CompanyId = r.CompanyId,
+                CompanyName = r.Company.Name,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt
+            })
+            .OrderBy(r => r.Name)
+            .ToListAsync();
+    }
 }

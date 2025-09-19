@@ -39,6 +39,4 @@ public class Country
 
     // Navigation properties
     public virtual ICollection<Company> Companies { get; set; } = new List<Company>();
-    public virtual ICollection<Region> Regions { get; set; } = new List<Region>();
-    public virtual ICollection<Depot> Depots { get; set; } = new List<Depot>();
 }

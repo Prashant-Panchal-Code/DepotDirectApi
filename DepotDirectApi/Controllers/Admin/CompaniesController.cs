@@ -214,4 +214,25 @@ public class CompaniesController : BaseController
             return StatusCode(500);
         }
     }
+
+    /// <summary>
+    /// Get regions assigned to a company
+    /// </summary>
+    [HttpGet("{id}/regions")]
+    public async Task<ActionResult<IEnumerable<RegionListItemDto>>> GetCompanyRegions(int id)
+    {
+        try
+        {
+            if (id <= 0)
+                return BadRequest("Invalid company ID");
+
+            var regions = await _companyRepository.GetRegionsByCompanyIdAsync(id);
+            return Ok(regions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving regions for company ID {CompanyId}", id);
+            return StatusCode(500, "An error occurred while retrieving company regions");
+        }
+    }
 }

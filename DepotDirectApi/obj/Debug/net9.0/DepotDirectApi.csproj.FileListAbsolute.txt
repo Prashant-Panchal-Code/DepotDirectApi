@@ -60,3 +60,4 @@ D:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\DepotDirectApi.pdb
 D:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\DepotDirectApi.genruntimeconfig.cache
 D:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\ref\DepotDirectApi.dll
 D:\source\DepotDirectApi\DepotDirectApi\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+D:\source\DepotDirectApi\DepotDirectApi\bin\Debug\net9.0\BCrypt.Net-Next.dll

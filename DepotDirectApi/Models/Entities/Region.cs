@@ -19,8 +19,8 @@ public class Region
     public string? RegionCode { get; set; }
 
     [Required]
-    [Column("country_id")]
-    public int CountryId { get; set; }
+    [Column("company_id")]
+    public int CompanyId { get; set; }
 
     [Column("metadata", TypeName = "jsonb")]
     public JsonDocument? Metadata { get; set; }
@@ -41,6 +41,6 @@ public class Region
     public DateTime? DeletedAt { get; set; }
 
     // Navigation properties
-    [ForeignKey("CountryId")]
-    public virtual Country Country { get; set; } = null!;
+    [ForeignKey("CompanyId")]
+    public virtual Company Company { get; set; } = null!;
 }
