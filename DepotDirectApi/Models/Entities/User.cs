@@ -61,4 +61,6 @@ public class User
 
     [ForeignKey("RoleId")]
     public virtual Role Role { get; set; } = null!;
+
+    public virtual ICollection<UserRegion> UserRegions { get; set; } = new List<UserRegion>();
 }

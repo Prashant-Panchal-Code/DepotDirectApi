@@ -4,23 +4,20 @@ using System.Text.Json;
 
 namespace DepotDirectApi.Models.Entities;
 
-[Table("regions", Schema = "depotdirect")]
-public class Region
+[Table("user_regions", Schema = "depotdirect")]
+public class UserRegion
 {
     [Key]
     [Column("id")]
     public int Id { get; set; }
 
     [Required]
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [Column("region_code")]
-    public string? RegionCode { get; set; }
+    [Column("user_id")]
+    public int UserId { get; set; }
 
     [Required]
-    [Column("company_id")]
-    public int CompanyId { get; set; }
+    [Column("region_id")]
+    public int RegionId { get; set; }
 
     [Column("metadata", TypeName = "jsonb")]
     public JsonDocument? Metadata { get; set; }
@@ -28,21 +25,16 @@ public class Region
     [Column("created_by")]
     public int? CreatedBy { get; set; }
 
-    [Column("last_updated_by")]
-    public int? LastUpdatedBy { get; set; }
-
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    [Column("deleted_at")]
-    public DateTime? DeletedAt { get; set; }
-
     // Navigation properties
-    [ForeignKey("CompanyId")]
-    public virtual Company Company { get; set; } = null!;
+    [ForeignKey("UserId")]
+    public virtual User User { get; set; } = null!;
 
-    public virtual ICollection<UserRegion> UserRegions { get; set; } = new List<UserRegion>();
+    [ForeignKey("RegionId")]
+    public virtual Region Region { get; set; } = null!;
 }

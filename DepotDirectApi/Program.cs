@@ -97,6 +97,7 @@ builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IRegionRepository, RegionRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRegionRepository, UserRegionRepository>();
 
 // Configure Basic Authentication only
 builder.Services.AddAuthentication("Basic")

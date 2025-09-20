@@ -15,6 +15,7 @@ public class DepotDirectDbContext : DbContext
     public DbSet<Region> Regions { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<UserRegion> UserRegions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,6 +106,28 @@ public class DepotDirectDbContext : DbContext
                   .WithMany(p => p.Users)
                   .HasForeignKey(d => d.RoleId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure UserRegion entity
+        modelBuilder.Entity<UserRegion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).HasDatabaseName("idx_user_regions_user");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_user_regions_region");
+            entity.HasIndex(e => new { e.UserId, e.RegionId }).IsUnique();
+            
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            
+            entity.HasOne(d => d.User)
+                  .WithMany(p => p.UserRegions)
+                  .HasForeignKey(d => d.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+                  
+            entity.HasOne(d => d.Region)
+                  .WithMany(p => p.UserRegions)
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
