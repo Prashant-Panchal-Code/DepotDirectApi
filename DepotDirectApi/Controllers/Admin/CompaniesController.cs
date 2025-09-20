@@ -69,7 +69,7 @@ public class CompaniesController : BaseController
     public async Task<ActionResult<CompanyResponseDto>> CreateCompany([FromBody] CreateCompanyDto createCompanyDto)
     {
         try
-        {
+        { 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 

@@ -29,6 +29,7 @@ public class CountryUpdateDto
 public class CountryWithStatsDto : CountryDto
 {
     public int CompaniesCount { get; set; }
+    public int RegionsCount { get; set; }
 }
 
 public class PagedResult<T>

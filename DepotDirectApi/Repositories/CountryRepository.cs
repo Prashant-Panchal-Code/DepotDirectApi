@@ -136,7 +136,11 @@ public class CountryRepository : ICountryRepository
                 UpdatedAt = c.UpdatedAt,
                 CreatedBy = c.CreatedBy,
                 LastUpdatedBy = c.LastUpdatedBy,
-                CompaniesCount = c.Companies.Count(comp => comp.DeletedAt == null)
+                CompaniesCount = c.Companies.Count(comp => comp.DeletedAt == null),
+                RegionsCount = c.Companies
+                    .Where(comp => comp.DeletedAt == null)
+                    .SelectMany(comp => comp.Regions)
+                    .Count(region => region.DeletedAt == null)
             })
             .FirstOrDefaultAsync();
 
@@ -148,6 +152,7 @@ public class CountryRepository : ICountryRepository
         var countries = await _context.Countries
             .Where(c => c.DeletedAt == null)
             .Include(c => c.Companies.Where(co => co.DeletedAt == null))
+                .ThenInclude(co => co.Regions.Where(r => r.DeletedAt == null))
             .OrderBy(c => c.Name)
             .ToListAsync();
 
@@ -161,7 +166,8 @@ public class CountryRepository : ICountryRepository
             UpdatedAt = c.UpdatedAt,
             CreatedBy = c.CreatedBy,
             LastUpdatedBy = c.LastUpdatedBy,
-            CompaniesCount = c.Companies.Count
+            CompaniesCount = c.Companies.Count,
+            RegionsCount = c.Companies.SelectMany(comp => comp.Regions).Count()
         }).ToList();
 
         return result;

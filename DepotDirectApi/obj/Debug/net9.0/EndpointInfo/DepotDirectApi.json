@@ -2372,6 +2372,10 @@
           "companiesCount": {
             "type": "integer",
             "format": "int32"
+          },
+          "regionsCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
