@@ -10,6 +10,7 @@ public interface IUserRepository
     Task<UserDto?> GetByEmailAsync(string email);
     Task<IEnumerable<UserDto>> GetByCompanyIdAsync(int companyId);
     Task<IEnumerable<UserDto>> GetByRoleIdAsync(int roleId);
+    Task<IEnumerable<UserDto>> GetByCountryIdAsync(int countryId);
     Task<User> CreateAsync(CreateUserDto createUserDto);
     Task<User?> UpdateAsync(int id, UpdateUserDto updateUserDto);
     Task<bool> DeleteAsync(int id);

@@ -149,6 +149,33 @@ public class UserRepository : IUserRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<UserDto>> GetByCountryIdAsync(int countryId)
+    {
+        return await _context.Users
+            .Include(u => u.Company)
+            .Include(u => u.Role)
+            .Where(u => u.DeletedAt == null && u.Company != null && u.Company.CountryId == countryId && u.Company.DeletedAt == null)
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                CompanyId = u.CompanyId,
+                CompanyName = u.Company.Name,
+                RoleId = u.RoleId,
+                RoleName = u.Role.Name,
+                Email = u.Email,
+                FullName = u.FullName,
+                Phone = u.Phone,
+                Active = u.Active,
+                Metadata = u.Metadata,
+                CreatedBy = u.CreatedBy,
+                LastUpdatedBy = u.LastUpdatedBy,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                DeletedAt = u.DeletedAt
+            })
+            .ToListAsync();
+    }
+
     public async Task<User> CreateAsync(CreateUserDto createUserDto)
     {
         var user = new User

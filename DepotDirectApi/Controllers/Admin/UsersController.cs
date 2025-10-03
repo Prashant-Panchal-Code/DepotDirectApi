@@ -111,6 +111,23 @@ public class UsersController : BaseController
     }
 
     /// <summary>
+    /// Get users by country ID
+    /// </summary>
+    [HttpGet("by-country/{countryId}")]
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetByCountryId(int countryId)
+    {
+        try
+        {
+            var users = await _userRepository.GetByCountryIdAsync(countryId);
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Create a new user
     /// </summary>
     [HttpPost]

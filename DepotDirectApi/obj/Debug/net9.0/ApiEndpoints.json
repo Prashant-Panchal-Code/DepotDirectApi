@@ -1413,6 +1413,32 @@
   },
   {
     "ContainingType": "DepotDirectApi.Controllers.Admin.UsersController",
+    "Method": "GetByCountryId",
+    "RelativePath": "api/admin/Users/by-country/{countryId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "countryId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.UserDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.UsersController",
     "Method": "GetByEmail",
     "RelativePath": "api/admin/Users/by-email/{email}",
     "HttpMethod": "GET",
