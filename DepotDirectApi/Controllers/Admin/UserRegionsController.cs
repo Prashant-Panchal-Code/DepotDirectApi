@@ -1,7 +1,10 @@
+using DepotDirectApi.Data;
 using DepotDirectApi.Models.DTOs;
+using DepotDirectApi.Models.Entities;
 using DepotDirectApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DepotDirectApi.Controllers.Admin;
 
@@ -14,17 +17,20 @@ public class UserRegionsController : BaseController
     private readonly IUserRepository _userRepository;
     private readonly IRegionRepository _regionRepository;
     private readonly ILogger<UserRegionsController> _logger;
+    private readonly DepotDirectDbContext _context;
 
     public UserRegionsController(
         IUserRegionRepository userRegionRepository,
         IUserRepository userRepository,
         IRegionRepository regionRepository,
-        ILogger<UserRegionsController> logger)
+        ILogger<UserRegionsController> logger,
+        DepotDirectDbContext context)
     {
         _userRegionRepository = userRegionRepository;
         _userRepository = userRepository;
         _regionRepository = regionRepository;
         _logger = logger;
+        _context = context;
     }
 
     /// <summary>
@@ -122,17 +128,35 @@ public class UserRegionsController : BaseController
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            _logger.LogInformation("Attempting to assign user {UserId} to region {RegionId}", createDto.UserId, createDto.RegionId);
+
             // Validate user exists
             var userExists = await _userRepository.ExistsAsync(createDto.UserId);
             if (!userExists)
-                return BadRequest(new { message = "User not found" });
+            {
+                _logger.LogWarning("User {UserId} not found", createDto.UserId);
+                return BadRequest(new { message = $"User with ID {createDto.UserId} not found" });
+            }
 
             // Validate region exists
             var regionExists = await _regionRepository.ExistsAsync(createDto.RegionId);
             if (!regionExists)
-                return BadRequest(new { message = "Region not found" });
+            {
+                _logger.LogWarning("Region {RegionId} not found", createDto.RegionId);
+                return BadRequest(new { message = $"Region with ID {createDto.RegionId} not found" });
+            }
+
+            // Validate assignment is allowed (same country)
+            var isValidAssignment = await _userRegionRepository.ValidateUserRegionAssignmentAsync(createDto.UserId, createDto.RegionId);
+            if (!isValidAssignment)
+            {
+                _logger.LogWarning("User {UserId} cannot be assigned to region {RegionId} - different countries", createDto.UserId, createDto.RegionId);
+                return BadRequest(new { message = "User cannot be assigned to a region in a different country than their company" });
+            }
 
             var currentUserId = GetCurrentUserId();
+            _logger.LogInformation("Creating user-region assignment with createdBy: {CurrentUserId}", currentUserId);
+
             var userRegion = await _userRegionRepository.AssignUserToRegionAsync(
                 createDto.UserId, 
                 createDto.RegionId, 
@@ -140,7 +164,7 @@ public class UserRegionsController : BaseController
 
             var result = await _userRegionRepository.GetUserRegionAsync(createDto.UserId, createDto.RegionId);
             
-            _logger.LogInformation("User {UserId} assigned to region {RegionId} by user {CurrentUserId}", 
+            _logger.LogInformation("Successfully assigned user {UserId} to region {RegionId} by user {CurrentUserId}", 
                 createDto.UserId, createDto.RegionId, currentUserId);
 
             return CreatedAtAction(nameof(GetUserRegion), 
@@ -148,11 +172,19 @@ public class UserRegionsController : BaseController
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning(ex, "Validation error when assigning user {UserId} to region {RegionId}: {Message}", 
+                createDto.UserId, createDto.RegionId, ex.Message);
             return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Database operation failed when assigning user {UserId} to region {RegionId}: {Message}", 
+                createDto.UserId, createDto.RegionId, ex.Message);
+            return StatusCode(500, new { message = "Database operation failed", details = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error assigning user {UserId} to region {RegionId}", createDto.UserId, createDto.RegionId);
+            _logger.LogError(ex, "Unexpected error assigning user {UserId} to region {RegionId}", createDto.UserId, createDto.RegionId);
             return StatusCode(500, new { message = "Internal server error", details = ex.Message });
         }
     }
@@ -311,6 +343,207 @@ public class UserRegionsController : BaseController
         {
             _logger.LogError(ex, "Error validating user-region assignment for user {UserId} and region {RegionId}", userId, regionId);
             return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Debug endpoint to check user and region details before assignment
+    /// </summary>
+    [HttpGet("{userId}/{regionId}/debug")]
+    public async Task<ActionResult> DebugUserRegionAssignment(int userId, int regionId)
+    {
+        try
+        {
+            // Check if user exists
+            var userExists = await _userRepository.ExistsAsync(userId);
+            var user = userExists ? await _userRepository.GetByIdAsync(userId) : null;
+
+            // Check if region exists
+            var regionExists = await _regionRepository.ExistsAsync(regionId);
+            var region = regionExists ? await _regionRepository.GetByIdAsync(regionId) : null;
+
+            // Check if already assigned
+            var alreadyAssigned = await _userRegionRepository.IsUserAssignedToRegionAsync(userId, regionId);
+
+            // Check validation
+            var isValidAssignment = await _userRegionRepository.ValidateUserRegionAssignmentAsync(userId, regionId);
+
+            var debugInfo = new
+            {
+                UserId = userId,
+                RegionId = regionId,
+                UserExists = userExists,
+                RegionExists = regionExists,
+                AlreadyAssigned = alreadyAssigned,
+                IsValidAssignment = isValidAssignment,
+                User = user != null ? new
+                {
+                    user.Id,
+                    user.FullName,
+                    user.Email,
+                    user.Active,
+                    user.CompanyId,
+                    user.CompanyName
+                } : null,
+                Region = region != null ? new
+                {
+                    region.Id,
+                    region.Name,
+                    region.CompanyId
+                } : null
+            };
+
+            return Ok(debugInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error debugging user-region assignment for user {UserId} and region {RegionId}", userId, regionId);
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Simple test assignment - minimal validation for debugging
+    /// </summary>
+    [HttpPost("{userId}/{regionId}/test-assign")]
+    public async Task<ActionResult> TestAssignUserToRegion(int userId, int regionId)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            
+            _logger.LogInformation("Test assignment: User {UserId} to Region {RegionId} by {CurrentUserId}", 
+                userId, regionId, currentUserId);
+
+            // Very basic check - just see if they exist in database
+            var userCount = await _context.Users.CountAsync(u => u.Id == userId);
+            var regionCount = await _context.Regions.CountAsync(r => r.Id == regionId);
+            
+            if (userCount == 0)
+            {
+                return BadRequest(new { message = $"User {userId} not found in database" });
+            }
+            
+            if (regionCount == 0)
+            {
+                return BadRequest(new { message = $"Region {regionId} not found in database" });
+            }
+
+            // Try direct assignment with minimal entity
+            var userRegion = new UserRegion
+            {
+                UserId = userId,
+                RegionId = regionId,
+                CreatedBy = currentUserId
+            };
+
+            _context.UserRegions.Add(userRegion);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Test assignment successful: User {UserId} assigned to Region {RegionId}", userId, regionId);
+            
+            return Ok(new { 
+                message = "Assignment successful",
+                userRegionId = userRegion.Id,
+                userId = userRegion.UserId,
+                regionId = userRegion.RegionId,
+                createdBy = userRegion.CreatedBy
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Test assignment failed for user {UserId} and region {RegionId}", userId, regionId);
+            return StatusCode(500, new { 
+                message = "Test assignment failed", 
+                details = ex.Message,
+                innerException = ex.InnerException?.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Apply database fix for user-regions trigger - Admin only
+    /// </summary>
+    [HttpPost("fix-database-trigger")]
+    public async Task<ActionResult> FixDatabaseTrigger()
+    {
+        try
+        {
+            _logger.LogInformation("Applying database trigger fix for user-regions");
+
+            var fixSql = @"
+                -- Drop the existing trigger and function first
+                DROP TRIGGER IF EXISTS trg_validate_user_region_matches_company_country ON depotdirect.user_regions;
+                DROP FUNCTION IF EXISTS depotdirect.fn_validate_user_region_matches_company_country();
+
+                -- Create corrected trigger function that follows the proper relationship
+                CREATE OR REPLACE FUNCTION depotdirect.fn_validate_user_region_matches_company_country()
+                RETURNS trigger LANGUAGE plpgsql AS $$
+                DECLARE
+                  reg_country integer;
+                  comp_country integer;
+                  comp_id integer;
+                BEGIN
+                  IF TG_OP NOT IN ('INSERT','UPDATE') THEN
+                    RETURN NEW;
+                  END IF;
+
+                  -- Get region's country through company relationship: region -> company -> country
+                  SELECT c.country_id INTO reg_country 
+                  FROM depotdirect.regions r 
+                  JOIN depotdirect.companies c ON r.company_id = c.id 
+                  WHERE r.id = NEW.region_id;
+                  
+                  IF reg_country IS NULL THEN
+                    RAISE EXCEPTION 'region id % does not exist or its company has no country_id', NEW.region_id;
+                  END IF;
+
+                  -- get user's company_id
+                  SELECT company_id INTO comp_id FROM depotdirect.users WHERE id = NEW.user_id;
+                  IF comp_id IS NULL THEN
+                    RAISE EXCEPTION 'user id % has no company_id; assign a company before adding regions', NEW.user_id;
+                  END IF;
+
+                  -- get company's country_id
+                  SELECT country_id INTO comp_country FROM depotdirect.companies WHERE id = comp_id;
+                  IF comp_country IS NULL THEN
+                    RAISE EXCEPTION 'company id % does not exist or has no country_id', comp_id;
+                  END IF;
+
+                  IF reg_country <> comp_country THEN
+                    RAISE EXCEPTION 'cannot assign region (id=%, country=%) to user (id=%) who belongs to company (id=%, country=%)', NEW.region_id, reg_country, NEW.user_id, comp_id, comp_country;
+                  END IF;
+
+                  RETURN NEW;
+                END;
+                $$;
+
+                -- Recreate the trigger
+                CREATE TRIGGER trg_validate_user_region_matches_company_country
+                  BEFORE INSERT OR UPDATE ON depotdirect.user_regions
+                  FOR EACH ROW EXECUTE FUNCTION depotdirect.fn_validate_user_region_matches_company_country();
+
+                -- Also ensure the sequence permissions are correct
+                GRANT USAGE, SELECT ON SEQUENCE depotdirect.user_regions_id_seq TO depotdirect_user;
+                GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE depotdirect.user_regions TO depotdirect_user;";
+
+            await _context.Database.ExecuteSqlRawAsync(fixSql);
+
+            _logger.LogInformation("Database trigger fix applied successfully");
+            
+            return Ok(new { 
+                message = "Database trigger fix applied successfully",
+                details = "The user-regions validation trigger has been corrected to use the proper relationship: Region -> Company -> Country"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to apply database trigger fix");
+            return StatusCode(500, new { 
+                message = "Failed to apply database trigger fix", 
+                details = ex.Message,
+                innerException = ex.InnerException?.Message
+            });
         }
     }
 }

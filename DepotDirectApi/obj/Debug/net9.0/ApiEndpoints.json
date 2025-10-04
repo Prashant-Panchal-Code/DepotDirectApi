@@ -1024,6 +1024,27 @@
   },
   {
     "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",
+    "Method": "DebugUserRegionAssignment",
+    "RelativePath": "api/admin/UserRegions/{userId}/{regionId}/debug",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "regionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",
     "Method": "CheckUserRegionAssignment",
     "RelativePath": "api/admin/UserRegions/{userId}/{regionId}/exists",
     "HttpMethod": "GET",
@@ -1055,6 +1076,27 @@
   },
   {
     "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",
+    "Method": "TestAssignUserToRegion",
+    "RelativePath": "api/admin/UserRegions/{userId}/{regionId}/test-assign",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "regionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",
     "Method": "ValidateUserRegionAssignment",
     "RelativePath": "api/admin/UserRegions/{userId}/{regionId}/validate",
     "HttpMethod": "GET",
@@ -1083,6 +1125,16 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",
+    "Method": "FixDatabaseTrigger",
+    "RelativePath": "api/admin/UserRegions/fix-database-trigger",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "DepotDirectApi.Controllers.Admin.UserRegionsController",

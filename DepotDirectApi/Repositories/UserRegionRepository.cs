@@ -17,31 +17,164 @@ public class UserRegionRepository : IUserRegionRepository
 
     public async Task<UserRegion> AssignUserToRegionAsync(int userId, int regionId, int createdBy)
     {
-        // Validate that the assignment is allowed (user's company country matches region's country)
-        if (!await ValidateUserRegionAssignmentAsync(userId, regionId))
-        {
-            throw new ArgumentException("User cannot be assigned to a region in a different country than their company");
-        }
-
-        // Check if assignment already exists
-        if (await IsUserAssignedToRegionAsync(userId, regionId))
+        // Check if assignment already exists first (before other validations)
+        var existingAssignment = await _context.UserRegions
+            .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RegionId == regionId);
+            
+        if (existingAssignment != null)
         {
             throw new ArgumentException("User is already assigned to this region");
         }
 
+        try
+        {
+            // Try the raw SQL approach first to avoid sequence permission issues
+            return await AssignUserToRegionWithRawSqlAsync(userId, regionId, createdBy);
+        }
+        catch (Exception ex) when (ex.Message.Contains("permission denied for sequence"))
+        {
+            // If sequence permission fails, try alternative approach
+            return await AssignUserToRegionAlternativeAsync(userId, regionId, createdBy);
+        }
+    }
+
+    private async Task<UserRegion> AssignUserToRegionWithRawSqlAsync(int userId, int regionId, int createdBy)
+    {
+        try
+        {
+            // Use raw SQL INSERT that lets PostgreSQL handle the ID generation
+            var sql = @"
+                INSERT INTO depotdirect.user_regions (user_id, region_id, created_by, metadata, created_at, updated_at)
+                VALUES (@userId, @regionId, @createdBy, '{}'::jsonb, now(), now())
+                RETURNING id, created_at, updated_at;";
+
+            // Execute the raw SQL
+            using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = sql;
+            
+            var userIdParam = command.CreateParameter();
+            userIdParam.ParameterName = "@userId";
+            userIdParam.Value = userId;
+            command.Parameters.Add(userIdParam);
+            
+            var regionIdParam = command.CreateParameter();
+            regionIdParam.ParameterName = "@regionId";
+            regionIdParam.Value = regionId;
+            command.Parameters.Add(regionIdParam);
+            
+            var createdByParam = command.CreateParameter();
+            createdByParam.ParameterName = "@createdBy";
+            createdByParam.Value = (object?)createdBy ?? DBNull.Value;
+            command.Parameters.Add(createdByParam);
+
+            await _context.Database.OpenConnectionAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (await reader.ReadAsync())
+            {
+                var id = reader.GetInt32(0);  // id column
+                var createdAt = reader.GetDateTime(1);  // created_at column
+                var updatedAt = reader.GetDateTime(2);  // updated_at column
+
+                // Return the created UserRegion
+                return new UserRegion
+                {
+                    Id = id,
+                    UserId = userId,
+                    RegionId = regionId,
+                    CreatedBy = createdBy,
+                    CreatedAt = createdAt,
+                    UpdatedAt = updatedAt,
+                    Metadata = JsonDocument.Parse("{}")
+                };
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to create user-region assignment");
+            }
+        }
+        catch (Exception ex) when (ex.Message.Contains("cannot assign region") || 
+                                 ex.Message.Contains("different country"))
+        {
+            throw new ArgumentException("User cannot be assigned to a region in a different country than their company");
+        }
+        catch (Exception ex) when (ex.Message.Contains("duplicate key value violates unique constraint"))
+        {
+            throw new ArgumentException("User is already assigned to this region");
+        }
+        catch (Exception ex) when (ex.Message.Contains("violates foreign key constraint"))
+        {
+            if (ex.Message.Contains("user_id"))
+            {
+                throw new ArgumentException($"User with ID {userId} does not exist");
+            }
+            else if (ex.Message.Contains("region_id"))
+            {
+                throw new ArgumentException($"Region with ID {regionId} does not exist");
+            }
+            throw new ArgumentException("Invalid user or region ID specified");
+        }
+        finally
+        {
+            await _context.Database.CloseConnectionAsync();
+        }
+    }
+
+    private async Task<UserRegion> AssignUserToRegionAlternativeAsync(int userId, int regionId, int createdBy)
+    {
+        // Create UserRegion entity - let database handle all validations via triggers
         var userRegion = new UserRegion
         {
             UserId = userId,
             RegionId = regionId,
             CreatedBy = createdBy,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Metadata = JsonDocument.Parse("{}")
         };
 
-        _context.UserRegions.Add(userRegion);
-        await _context.SaveChangesAsync();
-        
-        return userRegion;
+        try
+        {
+            _context.UserRegions.Add(userRegion);
+            await _context.SaveChangesAsync();
+            
+            // Reload the entity to get database-generated values
+            await _context.Entry(userRegion).ReloadAsync();
+            
+            return userRegion;
+        }
+        catch (DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+            
+            // Handle PostgreSQL specific constraint violations
+            if (innerMessage.Contains("duplicate key value violates unique constraint"))
+            {
+                throw new ArgumentException("User is already assigned to this region");
+            }
+            else if (innerMessage.Contains("violates foreign key constraint"))
+            {
+                if (innerMessage.Contains("user_id"))
+                {
+                    throw new ArgumentException($"User with ID {userId} does not exist");
+                }
+                else if (innerMessage.Contains("region_id"))
+                {
+                    throw new ArgumentException($"Region with ID {regionId} does not exist");
+                }
+                throw new ArgumentException("Invalid user or region ID specified");
+            }
+            else if (innerMessage.Contains("cannot assign region") || 
+                     innerMessage.Contains("different country"))
+            {
+                throw new ArgumentException("User cannot be assigned to a region in a different country than their company");
+            }
+            
+            throw new InvalidOperationException($"Database error while assigning user {userId} to region {regionId}: {innerMessage}", dbEx);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to assign user {userId} to region {regionId}: {ex.Message}", ex);
+        }
     }
 
     public async Task<bool> RemoveUserFromRegionAsync(int userId, int regionId)
@@ -257,34 +390,69 @@ public class UserRegionRepository : IUserRegionRepository
             userRegion.Metadata = JsonDocument.Parse(JsonSerializer.Serialize(updateDto.Metadata));
         }
 
-        userRegion.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return userRegion;
+        // Don't manually set UpdatedAt - let the database trigger handle it
+        try
+        {
+            await _context.SaveChangesAsync();
+            
+            // Reload to get updated values from database
+            await _context.Entry(userRegion).ReloadAsync();
+            
+            return userRegion;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to update user-region assignment: {ex.Message}", ex);
+        }
     }
 
     public async Task<bool> ValidateUserRegionAssignmentAsync(int userId, int regionId)
     {
-        // Get user's company country
-        var userCompanyCountry = await _context.Users
-            .Where(u => u.Id == userId && u.DeletedAt == null)
-            .Include(u => u.Company)
-            .Select(u => u.Company != null ? u.Company.CountryId : (int?)null)
-            .FirstOrDefaultAsync();
+        try
+        {
+            // Get user's company country
+            var userQuery = await _context.Users
+                .Where(u => u.Id == userId && u.DeletedAt == null)
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync();
 
-        if (userCompanyCountry == null)
+            if (userQuery == null)
+            {
+                return false; // User not found
+            }
+
+            if (userQuery.Company == null || userQuery.Company.DeletedAt != null)
+            {
+                return false; // User has no company or company is deleted
+            }
+
+            var userCountryId = userQuery.Company.CountryId;
+
+            // Get region's country through company relationship: Region -> Company -> Country
+            var regionQuery = await _context.Regions
+                .Where(r => r.Id == regionId && r.DeletedAt == null)
+                .Include(r => r.Company)
+                .ThenInclude(c => c.Country)
+                .FirstOrDefaultAsync();
+
+            if (regionQuery == null)
+            {
+                return false; // Region not found
+            }
+
+            if (regionQuery.Company == null || regionQuery.Company.DeletedAt != null)
+            {
+                return false; // Region has no company or company is deleted
+            }
+
+            var regionCountryId = regionQuery.Company.CountryId;
+
+            return userCountryId == regionCountryId;
+        }
+        catch (Exception)
+        {
+            // If there's any error in validation, return false for safety
             return false;
-
-        // Get region's country through company
-        var regionCountry = await _context.Regions
-            .Where(r => r.Id == regionId && r.DeletedAt == null)
-            .Include(r => r.Company)
-            .Select(r => r.Company.CountryId)
-            .FirstOrDefaultAsync();
-
-        if (regionCountry == 0)
-            return false;
-
-        return userCompanyCountry == regionCountry;
+        }
     }
 }

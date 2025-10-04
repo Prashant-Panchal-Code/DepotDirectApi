@@ -116,8 +116,17 @@ public class DepotDirectDbContext : DbContext
             entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_user_regions_region");
             entity.HasIndex(e => new { e.UserId, e.RegionId }).IsUnique();
             
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            // Let the database handle ID generation without explicit sequence reference
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            
+            // Configure timestamps to use database defaults
+            entity.Property(e => e.CreatedAt)
+                  .HasDefaultValueSql("now()")
+                  .ValueGeneratedOnAdd();
+                  
+            entity.Property(e => e.UpdatedAt)
+                  .HasDefaultValueSql("now()")
+                  .ValueGeneratedOnAddOrUpdate();
             
             entity.HasOne(d => d.User)
                   .WithMany(p => p.UserRegions)
