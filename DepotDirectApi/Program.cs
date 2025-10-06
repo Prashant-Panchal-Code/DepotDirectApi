@@ -6,9 +6,12 @@ using DepotDirectApi.Models.Entities;
 using DepotDirectApi.Repositories;
 using DepotDirectApi.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,7 +56,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure Swagger to support Basic authentication only
+// Configure Swagger to support both Basic and JWT authentication
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "DepotDirect API", Version = "v1" });
@@ -68,6 +71,17 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Basic Authorization header using username and password."
     });
     
+    // Add JWT Bearer Authentication
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+    });
+    
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -80,12 +94,24 @@ builder.Services.AddSwaggerGen(c =>
                 }
             },
             Array.Empty<string>()
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
     });
 });
 
 // Register authentication services
 builder.Services.AddScoped<IUserService, InMemoryUserService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Configure PostgreSQL Database
 builder.Services.AddDbContext<DepotDirectDbContext>(options =>
@@ -99,11 +125,46 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserRegionRepository, UserRegionRepository>();
 
-// Configure Basic Authentication only
-builder.Services.AddAuthentication("Basic")
-    .AddScheme<BasicAuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
+// Configure Authentication (JWT + Basic)
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-super-secret-key-that-is-at-least-32-characters-long-for-production-use!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "DepotDirectApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "DepotDirectClients";
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+})
+.AddScheme<BasicAuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Bearer", policy =>
+    {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.RequireAuthenticatedUser();
+    });
+    
+    options.AddPolicy("Basic", policy =>
+    {
+        policy.AuthenticationSchemes.Add("Basic");
+        policy.RequireAuthenticatedUser();
+    });
+});
 
 var app = builder.Build();
 

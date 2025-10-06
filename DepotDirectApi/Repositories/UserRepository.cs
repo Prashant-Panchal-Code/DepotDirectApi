@@ -248,4 +248,52 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users.AnyAsync(u => u.Email == email && u.DeletedAt == null);
     }
+
+    /// <summary>
+    /// Get user entity by email for authentication (includes password hash)
+    /// </summary>
+    public async Task<User?> GetUserEntityByEmailAsync(string email)
+    {
+        return await _context.Users
+            .Include(u => u.Company)
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null && u.Active);
+    }
+
+    /// <summary>
+    /// Validate user login with email and password
+    /// </summary>
+    public async Task<UserDto?> ValidateLoginAsync(string email, string password)
+    {
+        var user = await GetUserEntityByEmailAsync(email);
+        
+        if (user == null)
+            return null;
+
+        // Verify password using BCrypt
+        var isValidPassword = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        
+        if (!isValidPassword)
+            return null;
+
+        // Return UserDto if authentication successful
+        return new UserDto
+        {
+            Id = user.Id,
+            CompanyId = user.CompanyId,
+            CompanyName = user.Company?.Name,
+            RoleId = user.RoleId,
+            RoleName = user.Role.Name,
+            Email = user.Email,
+            FullName = user.FullName,
+            Phone = user.Phone,
+            Active = user.Active,
+            Metadata = user.Metadata,
+            CreatedBy = user.CreatedBy,
+            LastUpdatedBy = user.LastUpdatedBy,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            DeletedAt = user.DeletedAt
+        };
+    }
 }

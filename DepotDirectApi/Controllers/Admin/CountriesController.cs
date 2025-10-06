@@ -10,7 +10,7 @@ namespace DepotDirectApi.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")] // Fixed: Changed from "admin" to "Admin" to match JWT token
     [Tags("Admin - Countries")]
     public class CountriesController : BaseController
     {

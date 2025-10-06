@@ -364,3 +364,96 @@ Content-Type: application/json
   "active": true,
   "metadata": {}
 }
+
+##################################################
+# EMAIL-BASED AUTHENTICATION API TESTS
+##################################################
+
+### 57. Login with email and password (successful) - Gets JWT token
+POST http://localhost:5204/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@depotdirect.com",
+  "password": "admin123"
+}
+
+### 58. Login with email and password (invalid credentials)
+POST http://localhost:5204/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@depotdirect.com",
+  "password": "wrongpassword"
+}
+
+### 59. Login with non-existent email
+POST http://localhost:5204/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "anypassword"
+}
+
+### 60. Check if email exists (existing email)
+GET http://localhost:5204/api/auth/check-email?email=admin@depotdirect.com
+
+### 61. Check if email exists (non-existent email)
+GET http://localhost:5204/api/auth/check-email?email=nonexistent@example.com
+
+### 62. Get user by email (public info)
+GET http://localhost:5204/api/auth/user-by-email?email=admin@depotdirect.com
+
+### 63. Get user by email (non-existent)
+GET http://localhost:5204/api/auth/user-by-email?email=nonexistent@example.com
+
+### 64. Login with invalid email format
+POST http://localhost:5204/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "somepassword"
+}
+
+### 65. Create test users for authentication testing
+POST http://localhost:5204/api/auth/create-test-users
+Content-Type: application/json
+
+##################################################
+# JWT TOKEN AUTHENTICATION TESTS
+##################################################
+
+### 66. Test JWT Authentication - Get all regions with JWT token
+# First login to get token, then copy token from response and use below
+GET http://localhost:5204/api/admin/regions
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 67. Test JWT Authentication - Create region with JWT token
+# Replace YOUR_JWT_TOKEN_HERE with actual token from login response
+POST http://localhost:5204/api/admin/regions
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "name": "Test Region with JWT",
+  "regionCode": "JWT001",
+  "companyId": 1,
+  "metadata": {}
+}
+
+### 68. Test JWT Authentication - Get all users with JWT token
+GET http://localhost:5204/api/admin/users
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### 69. Test Basic Authentication (still works) - Get all regions
+GET http://localhost:5204/api/admin/regions
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+
+### 70. Test without authentication (should fail)
+GET http://localhost:5204/api/admin/regions
+Content-Type: application/json

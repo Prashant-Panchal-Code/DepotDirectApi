@@ -16,4 +16,6 @@ public interface IUserRepository
     Task<bool> DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
     Task<bool> ExistsByEmailAsync(string email);
+    Task<User?> GetUserEntityByEmailAsync(string email);
+    Task<UserDto?> ValidateLoginAsync(string email, string password);
 }
