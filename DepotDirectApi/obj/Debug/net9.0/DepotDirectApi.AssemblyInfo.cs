@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DepotDirectApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+621520472aa90c408b3a7447c82a4665c4cb33a0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+73e236438201474968fd6d847f8f99dc4e5e6d66")]
 [assembly: System.Reflection.AssemblyProductAttribute("DepotDirectApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DepotDirectApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

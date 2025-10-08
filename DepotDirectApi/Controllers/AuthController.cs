@@ -64,7 +64,8 @@ public class AuthController : ControllerBase
                 fullName: user.FullName,
                 roleId: user.RoleId,
                 roleName: user.RoleName,
-                companyId: user.CompanyId
+                companyId: user.CompanyId,
+                companyName: user.CompanyName
             );
 
             var expiresAt = DateTime.UtcNow.AddHours(8); // Token expires in 8 hours

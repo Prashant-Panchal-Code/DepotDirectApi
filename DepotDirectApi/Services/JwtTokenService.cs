@@ -7,7 +7,7 @@ namespace DepotDirectApi.Services;
 
 public interface IJwtTokenService
 {
-    string GenerateToken(int userId, string email, string fullName, int roleId, string roleName, int? companyId = null);
+    string GenerateToken(int userId, string email, string fullName, int roleId, string roleName, int? companyId = null, string? companyName = null);
     ClaimsPrincipal? ValidateToken(string token);
     int GetUserIdFromToken(string token);
 }
@@ -27,7 +27,7 @@ public class JwtTokenService : IJwtTokenService
         _audience = _configuration["Jwt:Audience"] ?? "DepotDirectClients";
     }
 
-    public string GenerateToken(int userId, string email, string fullName, int roleId, string roleName, int? companyId = null)
+    public string GenerateToken(int userId, string email, string fullName, int roleId, string roleName, int? companyId = null, string? companyName = null)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_secretKey);
@@ -52,6 +52,12 @@ public class JwtTokenService : IJwtTokenService
         if (companyId.HasValue)
         {
             claims.Add(new Claim("CompanyId", companyId.Value.ToString()));
+        }
+
+        // Add company name if provided
+        if (!string.IsNullOrWhiteSpace(companyName))
+        {
+            claims.Add(new Claim("CompanyName", companyName));
         }
 
         var tokenDescriptor = new SecurityTokenDescriptor
