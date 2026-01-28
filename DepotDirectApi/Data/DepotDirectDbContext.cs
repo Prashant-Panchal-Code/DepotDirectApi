@@ -16,6 +16,8 @@ public class DepotDirectDbContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserRegion> UserRegions { get; set; }
+    public DbSet<Site> Sites { get; set; }
+    public DbSet<RegionSite> RegionSites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -135,6 +137,68 @@ public class DepotDirectDbContext : DbContext
                   
             entity.HasOne(d => d.Region)
                   .WithMany(p => p.UserRegions)
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Site entity
+        modelBuilder.Entity<Site>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.SiteCode).HasDatabaseName("idx_sites_site_code");
+            entity.HasIndex(e => e.CountryId).HasDatabaseName("idx_sites_country");
+            entity.HasIndex(e => e.Town).HasDatabaseName("idx_sites_town");
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_sites_company");
+            entity.HasIndex(e => e.Shortcode).HasDatabaseName("idx_sites_shortcode");
+            entity.HasIndex(e => new { e.CountryId, e.SiteCode }).IsUnique().HasDatabaseName("sites_country_code_uniq");
+            
+            entity.Property(e => e.SiteCode).IsRequired();
+            entity.Property(e => e.SiteName).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.Priority).HasDefaultValue("Medium");
+            entity.Property(e => e.DeliveryStopped).HasDefaultValue(false);
+            entity.Property(e => e.PumpedRequired).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            
+            // Configure LatLong as a computed column - always shows 0,0 if coordinates are NULL
+            entity.Property(e => e.LatLong)
+                  .HasComputedColumnSql("COALESCE(latitude, 0)::text || ',' || COALESCE(longitude, 0)::text", stored: true);
+            
+            entity.HasOne(d => d.Country)
+                  .WithMany()
+                  .HasForeignKey(d => d.CountryId)
+                  .OnDelete(DeleteBehavior.Restrict);
+                  
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure RegionSite entity
+        modelBuilder.Entity<RegionSite>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.SiteId).HasDatabaseName("idx_region_sites_site");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_region_sites_region");
+            entity.HasIndex(e => new { e.SiteId, e.RegionId }).IsUnique();
+            
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.CreatedAt)
+                  .HasDefaultValueSql("now()")
+                  .ValueGeneratedOnAdd();
+            entity.Property(e => e.UpdatedAt)
+                  .HasDefaultValueSql("now()")
+                  .ValueGeneratedOnAddOrUpdate();
+            
+            entity.HasOne(d => d.Site)
+                  .WithMany(p => p.RegionSites)
+                  .HasForeignKey(d => d.SiteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+                  
+            entity.HasOne(d => d.Region)
+                  .WithMany()
                   .HasForeignKey(d => d.RegionId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
