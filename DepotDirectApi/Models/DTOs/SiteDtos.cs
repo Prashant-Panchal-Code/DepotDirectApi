@@ -125,6 +125,14 @@ public class SiteListItemDto
     public string? Town { get; set; }
     public bool Active { get; set; }
     public string Priority { get; set; } = "Medium";
+
+    // Added location fields for list views
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public string? LatLong { get; set; }
+    public string? Street { get; set; }
+    public string? PostalCode { get; set; }
+
     public int CompanyId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public int CountryId { get; set; }

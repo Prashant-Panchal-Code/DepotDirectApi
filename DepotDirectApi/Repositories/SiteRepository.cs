@@ -32,6 +32,11 @@ public class SiteRepository : ISiteRepository
                 CompanyName = s.Company.Name,
                 CountryId = s.CountryId,
                 CountryName = s.Country.Name,
+                Latitude = s.Latitude,
+                Longitude = s.Longitude,
+                LatLong = s.LatLong,
+                Street = s.Street,
+                PostalCode = s.PostalCode,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt
             })
@@ -309,6 +314,11 @@ public class SiteRepository : ISiteRepository
                 CompanyName = s.Company.Name,
                 CountryId = s.CountryId,
                 CountryName = s.Country.Name,
+                Latitude = s.Latitude,
+                Longitude = s.Longitude,
+                LatLong = s.LatLong,
+                Street = s.Street,
+                PostalCode = s.PostalCode,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt
             })
@@ -334,6 +344,11 @@ public class SiteRepository : ISiteRepository
                 CompanyName = s.Company.Name,
                 CountryId = s.CountryId,
                 CountryName = s.Country.Name,
+                Latitude = s.Latitude,
+                Longitude = s.Longitude,
+                LatLong = s.LatLong,
+                Street = s.Street,
+                PostalCode = s.PostalCode,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt
             })
@@ -362,6 +377,11 @@ public class SiteRepository : ISiteRepository
                 CompanyName = rs.Site.Company.Name,
                 CountryId = rs.Site.CountryId,
                 CountryName = rs.Site.Country.Name,
+                Latitude = rs.Site.Latitude,
+                Longitude = rs.Site.Longitude,
+                LatLong = rs.Site.LatLong,
+                Street = rs.Site.Street,
+                PostalCode = rs.Site.PostalCode,
                 CreatedAt = rs.Site.CreatedAt,
                 UpdatedAt = rs.Site.UpdatedAt
             })
@@ -392,6 +412,11 @@ public class SiteRepository : ISiteRepository
                 CompanyName = s.Company.Name,
                 CountryId = s.CountryId,
                 CountryName = s.Country.Name,
+                Latitude = s.Latitude,
+                Longitude = s.Longitude,
+                LatLong = s.LatLong,
+                Street = s.Street,
+                PostalCode = s.PostalCode,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt
             })
