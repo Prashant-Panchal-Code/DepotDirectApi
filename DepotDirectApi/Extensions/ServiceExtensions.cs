@@ -23,6 +23,10 @@ public static class ServiceExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserRegionRepository, UserRegionRepository>();
         services.AddScoped<ISiteRepository, SiteRepository>();
+        // Products
+        services.AddScoped<IProductRepository, ProductRepository>();
+        // Tanks
+        services.AddScoped<ITankRepository, TankRepository>();
         
         return services;
     }

@@ -102,4 +102,7 @@ public class Site
     public virtual Company Company { get; set; } = null!;
 
     public virtual ICollection<RegionSite> RegionSites { get; set; } = new List<RegionSite>();
+
+    // Navigation for tanks at this site
+    public virtual ICollection<SiteTank> SiteTanks { get; set; } = new List<SiteTank>();
 }

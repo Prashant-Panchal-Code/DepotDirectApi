@@ -547,6 +547,32 @@
     ]
   },
   {
+    "ContainingType": "DepotDirectApi.Controllers.Admin.ProductsController",
+    "Method": "GetByRegion",
+    "RelativePath": "api/admin/Products/by-region/{regionId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "regionId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.ProductListItemDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "DepotDirectApi.Controllers.Admin.RegionsController",
     "Method": "GetAll",
     "RelativePath": "api/admin/Regions",
@@ -2002,6 +2028,183 @@
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.SiteListItemDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "Create",
+    "RelativePath": "api/user/Tanks",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "DepotDirectApi.Models.DTOs.CreateTankDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.SiteTankDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "Update",
+    "RelativePath": "api/user/Tanks/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "DepotDirectApi.Models.DTOs.UpdateTankDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.SiteTankDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "Delete",
+    "RelativePath": "api/user/Tanks/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "GetById",
+    "RelativePath": "api/user/Tanks/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.SiteTankWithInventoryDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "GetFullById",
+    "RelativePath": "api/user/Tanks/{id}/full",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "DepotDirectApi.Models.DTOs.SiteTankFullDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "GetBySite",
+    "RelativePath": "api/user/Tanks/site/{siteId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "siteId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.SiteTankDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "DepotDirectApi.Controllers.User.TanksController",
+    "Method": "GetFullBySite",
+    "RelativePath": "api/user/Tanks/site/{siteId}/full",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "siteId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[DepotDirectApi.Models.DTOs.SiteTankFullDto, DepotDirectApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",

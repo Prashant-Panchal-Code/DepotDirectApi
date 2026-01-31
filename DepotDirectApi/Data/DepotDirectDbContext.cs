@@ -18,6 +18,11 @@ public class DepotDirectDbContext : DbContext
     public DbSet<UserRegion> UserRegions { get; set; }
     public DbSet<Site> Sites { get; set; }
     public DbSet<RegionSite> RegionSites { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<SiteTank> SiteTanks { get; set; }
+    public DbSet<TankReading> TankReadings { get; set; }
+    public DbSet<TankDelivery> TankDeliveries { get; set; }
+    public DbSet<SalesPattern> SalesPatterns { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -200,6 +205,110 @@ public class DepotDirectDbContext : DbContext
             entity.HasOne(d => d.Region)
                   .WithMany()
                   .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Product entity
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("products", "depotdirect");
+
+            entity.HasIndex(e => e.ProductCode).HasDatabaseName("idx_products_code");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_products_region");
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_products_company");
+
+            entity.Property(e => e.ProductCode).IsRequired();
+            entity.Property(e => e.ProductName).IsRequired();
+            entity.Property(e => e.IsHazardous).HasDefaultValue(true);
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure SiteTank entity
+        modelBuilder.Entity<SiteTank>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("site_tanks", "depotdirect");
+
+            entity.HasIndex(e => new { e.SiteId, e.TankCode }).IsUnique().HasDatabaseName("tank_site_code_uniq");
+
+            entity.Property(e => e.TankCode).IsRequired();
+            entity.Property(e => e.CapacityL).HasDefaultValue(0);
+            entity.Property(e => e.SafeFillL).HasDefaultValue(0);
+            entity.Property(e => e.DeadstockL).HasDefaultValue(0);
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Site)
+                  .WithMany(p => p.SiteTanks)
+                  .HasForeignKey(d => d.SiteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Product)
+                  .WithMany()
+                  .HasForeignKey(d => d.ProductId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure TankReading entity
+        modelBuilder.Entity<TankReading>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("tank_readings", "depotdirect");
+
+            entity.Property(e => e.ReadingTimestamp).HasDefaultValueSql("now()");
+            entity.Property(e => e.ReadingMethod).IsRequired();
+            entity.Property(e => e.CurrentVolumeL).IsRequired();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Tank)
+                  .WithMany(p => p.TankReadings)
+                  .HasForeignKey(d => d.TankId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure TankDelivery entity
+        modelBuilder.Entity<TankDelivery>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("tank_deliveries", "depotdirect");
+
+            entity.Property(e => e.Status).HasDefaultValue("Planned");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Tank)
+                  .WithMany(p => p.TankDeliveries)
+                  .HasForeignKey(d => d.TankId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure SalesPattern entity
+        modelBuilder.Entity<SalesPattern>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("sales_patterns", "depotdirect");
+
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            entity.HasIndex(e => new { e.TankId, e.DayOfWeek, e.HourOfDay }).IsUnique();
+
+            entity.HasOne(d => d.Tank)
+                  .WithMany()
+                  .HasForeignKey(d => d.TankId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }
