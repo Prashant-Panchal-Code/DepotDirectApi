@@ -24,6 +24,8 @@ public class DepotDirectDbContext : DbContext
     public DbSet<TankDelivery> TankDeliveries { get; set; }
     public DbSet<SalesPattern> SalesPatterns { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Depot> Depots { get; set; }
+    public DbSet<RegionDepot> RegionDepots { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +33,60 @@ public class DepotDirectDbContext : DbContext
 
         // Configure schema
         modelBuilder.HasDefaultSchema("depotdirect");
+
+        // Configure Depot entity
+        modelBuilder.Entity<Depot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DepotCode).HasDatabaseName("idx_depots_depot_code");
+            entity.HasIndex(e => e.CountryId).HasDatabaseName("idx_depots_country");
+            entity.HasIndex(e => e.Town).HasDatabaseName("idx_depots_town");
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_depots_company");
+            entity.HasIndex(e => e.Shortcode).HasDatabaseName("idx_depots_shortcode");
+
+            entity.Property(e => e.DepotCode).IsRequired();
+            entity.Property(e => e.DepotName).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.Priority).HasDefaultValue("Medium");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.Property(e => e.LatLong)
+                  .HasComputedColumnSql("CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL THEN (latitude::text || ',' || longitude::text) ELSE NULL END", stored: true);
+
+            entity.HasOne(d => d.Country)
+                  .WithMany()
+                  .HasForeignKey(d => d.CountryId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure RegionDepot entity
+        modelBuilder.Entity<RegionDepot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DepotId).HasDatabaseName("idx_region_depots_depot");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_region_depots_region");
+            entity.HasIndex(e => new { e.DepotId, e.RegionId }).IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAdd();
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAddOrUpdate();
+
+            entity.HasOne(d => d.Depot)
+                  .WithMany(p => p.RegionDepots)
+                  .HasForeignKey(d => d.DepotId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
 
         // Configure Country entity
         modelBuilder.Entity<Country>(entity =>

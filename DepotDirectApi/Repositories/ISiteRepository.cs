@@ -21,3 +21,25 @@ public interface ISiteRepository
     Task<bool> RemoveSiteFromRegionAsync(int siteId, int regionId);
     Task<bool> IsSiteAssignedToRegionAsync(int siteId, int regionId);
 }
+
+// New: IDepotRepository for Depot endpoints
+public interface IDepotRepository
+{
+    Task<IEnumerable<DepotListItemDto>> GetAllAsync();
+    Task<DepotResponseDto?> GetByIdAsync(int id);
+    Task<DepotResponseDto> CreateAsync(CreateDepotDto createDepotDto, int? createdBy = null);
+    Task<DepotResponseDto?> UpdateAsync(int id, UpdateDepotDto updateDepotDto, int? updatedBy = null);
+    Task<bool> DeleteAsync(int id);
+    Task<bool> ExistsAsync(int id);
+    Task<bool> ExistsByDepotCodeAndCountryAsync(string depotCode, int countryId, int? excludeId = null);
+
+    Task<IEnumerable<DepotListItemDto>> GetByCompanyIdAsync(int companyId);
+    Task<IEnumerable<DepotListItemDto>> GetByCountryIdAsync(int countryId);
+    Task<IEnumerable<DepotListItemDto>> GetByRegionIdAsync(int regionId);
+    Task<IEnumerable<DepotListItemDto>> SearchAsync(string searchTerm);
+
+    // Region-Depot mapping operations
+    Task<RegionDepotDto> AssignDepotToRegionAsync(int depotId, int regionId, string? depotCode = null, int? createdBy = null);
+    Task<bool> RemoveDepotFromRegionAsync(int depotId, int regionId);
+    Task<bool> IsDepotAssignedToRegionAsync(int depotId, int regionId);
+}
