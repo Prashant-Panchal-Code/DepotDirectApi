@@ -29,6 +29,9 @@ public class SalesPattern
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("deleted_at")]
+    public DateTime? DeletedAt { get; set; }
+
     [ForeignKey("TankId")]
     public virtual SiteTank Tank { get; set; } = null!;
 }

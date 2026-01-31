@@ -29,8 +29,8 @@ public class TankRepository : ITankRepository
                 throw new ArgumentException($"Product with ID {dto.ProductId.Value} does not exist.");
         }
 
-        // Check uniqueness of tank code within the site
-        var codeExists = await _context.SiteTanks.AnyAsync(t => t.SiteId == dto.SiteId && t.TankCode == dto.TankCode);
+        // Check uniqueness of tank code within the site (ignore deleted tanks)
+        var codeExists = await _context.SiteTanks.AnyAsync(t => t.SiteId == dto.SiteId && t.TankCode == dto.TankCode && t.DeletedAt == null);
         if (codeExists)
             throw new ArgumentException($"Tank code '{dto.TankCode}' already exists for site {dto.SiteId}.");
 
@@ -78,7 +78,11 @@ public class TankRepository : ITankRepository
 
     public async Task<SiteTankDto?> UpdateTankAsync(int tankId, UpdateTankDto dto, int? updatedBy = null)
     {
-        var tank = await _context.Set<SiteTank>().FindAsync(tankId);
+        // Do not allow updating deleted tanks
+        var tank = await _context.SiteTanks
+            .Where(t => t.Id == tankId && t.DeletedAt == null)
+            .FirstOrDefaultAsync();
+
         if (tank == null) return null;
 
         if (dto.ProductId.HasValue) tank.ProductId = dto.ProductId.Value;
@@ -111,11 +115,14 @@ public class TankRepository : ITankRepository
 
     public async Task<bool> DeleteTankAsync(int tankId)
     {
-        var tank = await _context.Set<SiteTank>().FindAsync(tankId);
+        var tank = await _context.SiteTanks
+            .Where(t => t.Id == tankId && t.DeletedAt == null)
+            .FirstOrDefaultAsync();
         if (tank == null) return false;
 
-        // Soft delete: mark inactive
+        // Soft delete: mark inactive and set deleted timestamp
         tank.Active = false;
+        tank.DeletedAt = DateTime.UtcNow;
         tank.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
@@ -125,7 +132,7 @@ public class TankRepository : ITankRepository
     public async Task<IEnumerable<SiteTankDto>> GetTanksBySiteAsync(int siteId)
     {
         return await _context.Set<SiteTank>()
-            .Where(t => t.SiteId == siteId && t.Active)
+            .Where(t => t.SiteId == siteId && t.Active && t.DeletedAt == null)
             .Select(t => new SiteTankDto
             {
                 Id = t.Id,
@@ -148,7 +155,7 @@ public class TankRepository : ITankRepository
     {
         var tank = await _context.Set<SiteTank>()
             .Include(t => t.TankReadings)
-            .Where(t => t.Id == tankId)
+            .Where(t => t.Id == tankId && t.DeletedAt == null)
             .FirstOrDefaultAsync();
 
         if (tank == null) return null;
@@ -167,16 +174,18 @@ public class TankRepository : ITankRepository
             Metadata = tank.Metadata,
             CreatedAt = tank.CreatedAt,
             UpdatedAt = tank.UpdatedAt,
-            Readings = tank.TankReadings.Select(r => new TankReadingDto
-            {
-                Id = r.Id,
-                TankId = r.TankId,
-                ReadingTimestamp = r.ReadingTimestamp,
-                ReadingMethod = r.ReadingMethod,
-                CurrentVolumeL = r.CurrentVolumeL,
-                SalesSinceLastReadingL = r.SalesSinceLastReadingL,
-                AvgDailySalesL = r.AvgDailySalesL
-            }).OrderByDescending(r => r.ReadingTimestamp).ToList()
+            Readings = tank.TankReadings
+                .Where(r => r.DeletedAt == null)
+                .Select(r => new TankReadingDto
+                {
+                    Id = r.Id,
+                    TankId = r.TankId,
+                    ReadingTimestamp = r.ReadingTimestamp,
+                    ReadingMethod = r.ReadingMethod,
+                    CurrentVolumeL = r.CurrentVolumeL,
+                    SalesSinceLastReadingL = r.SalesSinceLastReadingL,
+                    AvgDailySalesL = r.AvgDailySalesL
+                }).OrderByDescending(r => r.ReadingTimestamp).ToList()
         };
 
         return dto;
@@ -187,12 +196,13 @@ public class TankRepository : ITankRepository
         var tank = await _context.SiteTanks
             .Include(t => t.TankReadings)
             .Include(t => t.TankDeliveries)
-            .Where(t => t.Id == tankId)
+            .Where(t => t.Id == tankId && t.DeletedAt == null)
             .FirstOrDefaultAsync();
 
         if (tank == null) return null;
 
         var lastReadings = tank.TankReadings
+            .Where(r => r.DeletedAt == null)
             .OrderByDescending(r => r.ReadingTimestamp)
             .Take(10)
             .Select(r => new TankReadingDto
@@ -207,6 +217,7 @@ public class TankRepository : ITankRepository
             }).ToList();
 
         var deliveries = tank.TankDeliveries
+            .Where(d => d.DeletedAt == null)
             .OrderByDescending(d => d.CreatedAt)
             .Take(20)
             .Select(d => new TankDeliveryDto
@@ -259,7 +270,7 @@ public class TankRepository : ITankRepository
     public async Task<IEnumerable<SiteTankFullDto>> GetTanksFullBySiteAsync(int siteId)
     {
         var tanks = await _context.SiteTanks
-            .Where(t => t.SiteId == siteId && t.Active)
+            .Where(t => t.SiteId == siteId && t.DeletedAt == null)
             .Include(t => t.TankReadings)
             .Include(t => t.TankDeliveries)
             .ToListAsync();
@@ -269,6 +280,7 @@ public class TankRepository : ITankRepository
         foreach (var tank in tanks)
         {
             var lastReadings = tank.TankReadings
+                .Where(r => r.DeletedAt == null)
                 .OrderByDescending(r => r.ReadingTimestamp)
                 .Take(10)
                 .Select(r => new TankReadingDto
@@ -283,6 +295,7 @@ public class TankRepository : ITankRepository
                 }).ToList();
 
             var deliveries = tank.TankDeliveries
+                .Where(d => d.DeletedAt == null)
                 .OrderByDescending(d => d.CreatedAt)
                 .Take(20)
                 .Select(d => new TankDeliveryDto
@@ -334,7 +347,9 @@ public class TankRepository : ITankRepository
 
     public async Task<TankReadingDto> CreateTankReadingAsync(int tankId, CreateTankReadingDto dto, int? createdBy = null)
     {
-        var tank = await _context.SiteTanks.FindAsync(tankId);
+        var tank = await _context.SiteTanks
+            .Where(t => t.Id == tankId && t.DeletedAt == null)
+            .FirstOrDefaultAsync();
         if (tank == null) throw new ArgumentException($"Tank with ID {tankId} does not exist.");
 
         var reading = new TankReading

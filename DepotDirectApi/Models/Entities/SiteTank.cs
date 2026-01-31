@@ -46,6 +46,9 @@ public class SiteTank
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [Column("deleted_at")]
+    public DateTime? DeletedAt { get; set; }
+
     // Navigation
     [ForeignKey("SiteId")]
     public virtual Site Site { get; set; } = null!;

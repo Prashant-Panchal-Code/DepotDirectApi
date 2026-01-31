@@ -23,6 +23,7 @@ public class DepotDirectDbContext : DbContext
     public DbSet<TankReading> TankReadings { get; set; }
     public DbSet<TankDelivery> TankDeliveries { get; set; }
     public DbSet<SalesPattern> SalesPatterns { get; set; }
+    public DbSet<Note> Notes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -206,6 +207,25 @@ public class DepotDirectDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.RegionId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Note entity
+        modelBuilder.Entity<Note>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("notes", "depotdirect");
+            entity.Property(e => e.Category).IsRequired();
+            entity.Property(e => e.Priority).HasDefaultValue("Medium");
+            entity.Property(e => e.Comment).IsRequired();
+            entity.Property(e => e.Status).HasDefaultValue("Open");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            entity.HasIndex(e => e.SiteId).HasDatabaseName("idx_notes_site");
+            entity.HasIndex(e => e.DepotId).HasDatabaseName("idx_notes_depot");
+            entity.HasIndex(e => e.ParkingId).HasDatabaseName("idx_notes_parking");
+            entity.HasIndex(e => e.VehicleId).HasDatabaseName("idx_notes_vehicle");
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_notes_company");
+            entity.HasIndex(e => e.Status).HasDatabaseName("idx_notes_status");
         });
 
         // Configure Product entity
