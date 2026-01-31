@@ -465,4 +465,139 @@ public class DepotRepository : IDepotRepository
         return await _context.RegionDepots
             .AnyAsync(r => r.DepotId == depotId && r.RegionId == regionId && r.DeletedAt == null);
     }
+
+    // Depot product operations
+    public async Task<IEnumerable<DepotProductDto>> GetProductsByDepotIdAsync(int depotId)
+    {
+        return await _context.DepotProducts
+            .Where(dp => dp.DepotId == depotId && dp.DeletedAt == null)
+            .Include(dp => dp.Product)
+            .Select(dp => new DepotProductDto
+            {
+                Id = dp.Id,
+                DepotId = dp.DepotId,
+                ProductId = dp.ProductId,
+                ProductName = dp.Product.ProductName,
+                ProductCode = dp.Product.ProductCode,
+                Density = dp.Density,
+                PlanningTemperature = dp.PlanningTemperature,
+                LoadingRateLpm = dp.LoadingRateLpm,
+                ProductAvailable = dp.ProductAvailable,
+                CostPerLitre = dp.CostPerLitre,
+                OfftakeLimitActive = dp.OfftakeLimitActive,
+                DailyMinLimitL = dp.DailyMinLimitL,
+                DailyMaxLimitL = dp.DailyMaxLimitL,
+                Metadata = dp.Metadata,
+                CreatedBy = dp.CreatedBy,
+                CreatedAt = dp.CreatedAt,
+                UpdatedAt = dp.UpdatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<DepotProductDto> CreateDepotProductAsync(int depotId, CreateDepotProductDto dto, int? createdBy = null)
+    {
+        // Validate depot exists
+        var depot = await _context.Depots.Where(d => d.Id == depotId && d.DeletedAt == null).FirstOrDefaultAsync();
+        if (depot == null) throw new ArgumentException($"Depot with ID {depotId} does not exist.");
+
+        // Validate product exists and belongs to same company
+        var product = await _context.Products.Where(p => p.Id == dto.ProductId && p.DeletedAt == null).FirstOrDefaultAsync();
+        if (product == null) throw new ArgumentException($"Product with ID {dto.ProductId} does not exist.");
+        if (product.CompanyId != depot.CompanyId) throw new ArgumentException("Product and Depot must belong to same company.");
+
+        // Prevent duplicate
+        var exists = await _context.DepotProducts.AnyAsync(dp => dp.DepotId == depotId && dp.ProductId == dto.ProductId && dp.DeletedAt == null);
+        if (exists) throw new ArgumentException("This product is already assigned to the depot.");
+
+        var dp = new Models.Entities.DepotProduct
+        {
+            DepotId = depotId,
+            ProductId = dto.ProductId,
+            Density = dto.Density,
+            PlanningTemperature = dto.PlanningTemperature,
+            LoadingRateLpm = dto.LoadingRateLpm ?? 1500.00M,
+            ProductAvailable = dto.ProductAvailable ?? true,
+            CostPerLitre = dto.CostPerLitre,
+            OfftakeLimitActive = dto.OfftakeLimitActive ?? false,
+            DailyMinLimitL = dto.DailyMinLimitL,
+            DailyMaxLimitL = dto.DailyMaxLimitL,
+            Metadata = dto.Metadata,
+            CreatedBy = createdBy,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.DepotProducts.Add(dp);
+        await _context.SaveChangesAsync();
+
+        return await _context.DepotProducts
+            .Where(x => x.Id == dp.Id)
+            .Include(x => x.Product)
+            .Select(x => new DepotProductDto
+            {
+                Id = x.Id,
+                DepotId = x.DepotId,
+                ProductId = x.ProductId,
+                ProductName = x.Product.ProductName,
+                ProductCode = x.Product.ProductCode,
+                Density = x.Density,
+                PlanningTemperature = x.PlanningTemperature,
+                LoadingRateLpm = x.LoadingRateLpm,
+                ProductAvailable = x.ProductAvailable,
+                CostPerLitre = x.CostPerLitre,
+                OfftakeLimitActive = x.OfftakeLimitActive,
+                DailyMinLimitL = x.DailyMinLimitL,
+                DailyMaxLimitL = x.DailyMaxLimitL,
+                Metadata = x.Metadata,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            })
+            .FirstOrDefaultAsync() ?? throw new InvalidOperationException("Failed to retrieve created depot product.");
+    }
+
+    public async Task<DepotProductDto?> UpdateDepotProductAsync(int depotId, int id, UpdateDepotProductDto dto, int? updatedBy = null)
+    {
+        var dp = await _context.DepotProducts.Where(x => x.Id == id && x.DepotId == depotId && x.DeletedAt == null).FirstOrDefaultAsync();
+        if (dp == null) return null;
+
+        if (dto.Density.HasValue) dp.Density = dto.Density;
+        if (dto.PlanningTemperature.HasValue) dp.PlanningTemperature = dto.PlanningTemperature;
+        if (dto.LoadingRateLpm.HasValue) dp.LoadingRateLpm = dto.LoadingRateLpm.Value;
+        if (dto.ProductAvailable.HasValue) dp.ProductAvailable = dto.ProductAvailable.Value;
+        if (dto.CostPerLitre.HasValue) dp.CostPerLitre = dto.CostPerLitre;
+        if (dto.OfftakeLimitActive.HasValue) dp.OfftakeLimitActive = dto.OfftakeLimitActive.Value;
+        if (dto.DailyMinLimitL.HasValue) dp.DailyMinLimitL = dto.DailyMinLimitL;
+        if (dto.DailyMaxLimitL.HasValue) dp.DailyMaxLimitL = dto.DailyMaxLimitL;
+        if (dto.Metadata != null) dp.Metadata = dto.Metadata;
+
+        dp.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return await _context.DepotProducts
+            .Where(x => x.Id == id)
+            .Include(x => x.Product)
+            .Select(x => new DepotProductDto
+            {
+                Id = x.Id,
+                DepotId = x.DepotId,
+                ProductId = x.ProductId,
+                ProductName = x.Product.ProductName,
+                ProductCode = x.Product.ProductCode,
+                Density = x.Density,
+                PlanningTemperature = x.PlanningTemperature,
+                LoadingRateLpm = x.LoadingRateLpm,
+                ProductAvailable = x.ProductAvailable,
+                CostPerLitre = x.CostPerLitre,
+                OfftakeLimitActive = x.OfftakeLimitActive,
+                DailyMinLimitL = x.DailyMinLimitL,
+                DailyMaxLimitL = x.DailyMaxLimitL,
+                Metadata = x.Metadata,
+                CreatedBy = x.CreatedBy,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            })
+            .FirstOrDefaultAsync();
+    }
 }

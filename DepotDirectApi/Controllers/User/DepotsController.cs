@@ -284,4 +284,74 @@ public class DepotsController : BaseController
             return StatusCode(500, new { message = "Internal server error", details = ex.Message });
         }
     }
+
+    [HttpGet("{depotId}/products")]
+    public async Task<ActionResult<IEnumerable<DepotProductDto>>> GetDepotProducts(int depotId)
+    {
+        try
+        {
+            var products = await _depotRepository.GetProductsByDepotIdAsync(depotId);
+            return Ok(products);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving products for depot {DepotId}", depotId);
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
+
+    [HttpPost("{depotId}/products")]
+    public async Task<ActionResult<DepotProductDto>> CreateDepotProduct(int depotId, [FromBody] CreateDepotProductDto createDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetCurrentUserId();
+            _logger.LogInformation("Creating depot product for depot {DepotId} product {ProductId} by user {UserId}", depotId, createDto.ProductId, userId);
+
+            var dp = await _depotRepository.CreateDepotProductAsync(depotId, createDto, userId);
+            return CreatedAtAction(nameof(GetDepotProducts), new { depotId = depotId }, dp);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation error creating depot product for depot {DepotId}", depotId);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating depot product for depot {DepotId}", depotId);
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
+
+    [HttpPut("{depotId}/products/{id}")]
+    public async Task<ActionResult<DepotProductDto>> UpdateDepotProduct(int depotId, int id, [FromBody] UpdateDepotProductDto updateDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetCurrentUserId();
+            _logger.LogInformation("Updating depot product {Id} for depot {DepotId} by user {UserId}", id, depotId, userId);
+
+            var dp = await _depotRepository.UpdateDepotProductAsync(depotId, id, updateDto, userId);
+            if (dp == null)
+                return NotFound(new { message = "Depot product not found" });
+
+            return Ok(dp);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation error updating depot product {Id} for depot {DepotId}", id, depotId);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating depot product {Id} for depot {DepotId}", id, depotId);
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
+    }
 }

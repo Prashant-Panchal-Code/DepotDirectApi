@@ -42,4 +42,9 @@ public interface IDepotRepository
     Task<RegionDepotDto> AssignDepotToRegionAsync(int depotId, int regionId, string? depotCode = null, int? createdBy = null);
     Task<bool> RemoveDepotFromRegionAsync(int depotId, int regionId);
     Task<bool> IsDepotAssignedToRegionAsync(int depotId, int regionId);
+
+    // Depot product operations
+    Task<IEnumerable<DepotProductDto>> GetProductsByDepotIdAsync(int depotId);
+    Task<DepotProductDto> CreateDepotProductAsync(int depotId, CreateDepotProductDto dto, int? createdBy = null);
+    Task<DepotProductDto?> UpdateDepotProductAsync(int depotId, int id, UpdateDepotProductDto dto, int? updatedBy = null);
 }

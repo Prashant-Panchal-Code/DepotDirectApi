@@ -26,6 +26,7 @@ public class DepotDirectDbContext : DbContext
     public DbSet<Note> Notes { get; set; }
     public DbSet<Depot> Depots { get; set; }
     public DbSet<RegionDepot> RegionDepots { get; set; }
+    public DbSet<DepotProduct> DepotProducts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -386,6 +387,28 @@ public class DepotDirectDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.TankId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure DepotProduct entity
+        modelBuilder.Entity<DepotProduct>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("depot_products", "depotdirect");
+            entity.HasIndex(e => e.DepotId).HasDatabaseName("idx_depot_products_depot");
+            entity.HasIndex(e => e.ProductId).HasDatabaseName("idx_depot_products_product");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAdd();
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAddOrUpdate();
+
+            entity.HasOne(d => d.Depot)
+                  .WithMany()
+                  .HasForeignKey(d => d.DepotId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Product)
+                  .WithMany()
+                  .HasForeignKey(d => d.ProductId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
