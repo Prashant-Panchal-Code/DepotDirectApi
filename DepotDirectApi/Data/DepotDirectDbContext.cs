@@ -27,6 +27,7 @@ public class DepotDirectDbContext : DbContext
     public DbSet<Depot> Depots { get; set; }
     public DbSet<RegionDepot> RegionDepots { get; set; }
     public DbSet<DepotProduct> DepotProducts { get; set; }
+    public DbSet<DepotSite> DepotSites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -409,6 +410,34 @@ public class DepotDirectDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.ProductId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure DepotSite entity
+        modelBuilder.Entity<DepotSite>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DepotId).HasDatabaseName("idx_depot_sites_depot");
+            entity.HasIndex(e => e.SiteId).HasDatabaseName("idx_depot_sites_site");
+            entity.HasIndex(e => new { e.SiteId, e.IsPrimary }).HasDatabaseName("idx_depot_sites_primary");
+            entity.HasIndex(e => new { e.DepotId, e.SiteId }).IsUnique().HasDatabaseName("depot_sites_uniq");
+
+            entity.Property(e => e.DistanceKm).IsRequired().HasPrecision(10, 2);
+            entity.Property(e => e.TravelTimeMins).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.IsPrimary).HasDefaultValue(false);
+            entity.Property(e => e.TransportRate).HasPrecision(10, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Depot)
+                  .WithMany()
+                  .HasForeignKey(d => d.DepotId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Site)
+                  .WithMany()
+                  .HasForeignKey(d => d.SiteId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
