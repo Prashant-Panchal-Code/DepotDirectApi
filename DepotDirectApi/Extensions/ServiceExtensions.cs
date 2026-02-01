@@ -26,6 +26,7 @@ public static class ServiceExtensions
         services.AddScoped<INoteRepository, NoteRepository>();
         services.AddScoped<IDepotRepository, DepotRepository>();
         services.AddScoped<IDepotSiteRepository, DepotSiteRepository>();
+        services.AddScoped<IParkingRepository, ParkingRepository>();
         
         // Products
         services.AddScoped<IProductRepository, ProductRepository>();

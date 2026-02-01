@@ -28,6 +28,8 @@ public class DepotDirectDbContext : DbContext
     public DbSet<RegionDepot> RegionDepots { get; set; }
     public DbSet<DepotProduct> DepotProducts { get; set; }
     public DbSet<DepotSite> DepotSites { get; set; }
+    public DbSet<Parking> Parkings { get; set; }
+    public DbSet<RegionParking> RegionParkings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -437,6 +439,62 @@ public class DepotDirectDbContext : DbContext
             entity.HasOne(d => d.Site)
                   .WithMany()
                   .HasForeignKey(d => d.SiteId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Parking entity
+        modelBuilder.Entity<Parking>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ParkingCode).HasDatabaseName("idx_parkings_parking_code");
+            entity.HasIndex(e => e.CountryId).HasDatabaseName("idx_parkings_country");
+            entity.HasIndex(e => e.Town).HasDatabaseName("idx_parkings_town");
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_parkings_company");
+            entity.HasIndex(e => e.Shortcode).HasDatabaseName("idx_parkings_shortcode");
+            entity.HasIndex(e => new { e.CountryId, e.ParkingCode }).IsUnique().HasDatabaseName("parkings_country_code_uniq");
+
+            entity.Property(e => e.ParkingCode).IsRequired();
+            entity.Property(e => e.ParkingName).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.Latitude).HasPrecision(10, 7);
+            entity.Property(e => e.Longitude).HasPrecision(10, 7);
+
+            entity.Property(e => e.LatLong)
+                  .HasComputedColumnSql("CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL THEN (latitude::text || ',' || longitude::text) ELSE NULL END", stored: true);
+
+            entity.HasOne(d => d.Country)
+                  .WithMany()
+                  .HasForeignKey(d => d.CountryId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure RegionParking entity
+        modelBuilder.Entity<RegionParking>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ParkingId).HasDatabaseName("idx_region_parkings_parking");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_region_parkings_region");
+            entity.HasIndex(e => new { e.ParkingId, e.RegionId }).IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAdd();
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()").ValueGeneratedOnAddOrUpdate();
+
+            entity.HasOne(d => d.Parking)
+                  .WithMany(p => p.RegionParkings)
+                  .HasForeignKey(d => d.ParkingId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

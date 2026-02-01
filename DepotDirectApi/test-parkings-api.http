@@ -1,0 +1,218 @@
+### Parkings API Tests
+### Complete CRUD operations testing
+
+@baseUrl = http://localhost:5000
+@token = your-jwt-token-here
+
+### 1. Login to get JWT token (replace with actual credentials)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "password"
+}
+
+### 2. Create a new parking (minimal data)
+POST {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parkingCode": "PARK001",
+  "parkingName": "Central Business Parking",
+  "regionId": 1
+}
+
+### 3. Get all parkings (should show the created parking)
+GET {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+
+### 4. Get the specific parking by ID (replace {id} with actual ID from step 2)
+GET {{baseUrl}}/api/user/parkings/1
+Authorization: Bearer {{token}}
+
+### 5. Update the parking with detailed information
+PUT {{baseUrl}}/api/user/parkings/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "shortcode": "CBP",
+  "latitude": 51.5074,
+  "longitude": -0.1278,
+  "street": "123 Business Avenue",
+  "postalCode": "SW1A 1AA",
+  "town": "Business District",
+  "managerName": "John Smith",
+  "managerPhone": "+44 20 7946 0958",
+  "managerEmail": "john.smith@parking.com",
+  "emergencyContact": "Emergency Line: +44 20 7946 0999",
+  "parkingSpaces": 150,
+  "active": true
+}
+
+### 6. Get the updated parking details
+GET {{baseUrl}}/api/user/parkings/1
+Authorization: Bearer {{token}}
+
+### 7. Create another parking for testing
+POST {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parkingCode": "PARK002",
+  "parkingName": "North Side Parking Hub",
+  "regionId": 1
+}
+
+### 8. Search parkings by name
+GET {{baseUrl}}/api/user/parkings/search?query=central
+Authorization: Bearer {{token}}
+
+### 9. Get parkings by company
+GET {{baseUrl}}/api/user/parkings/by-company/1
+Authorization: Bearer {{token}}
+
+### 10. Get parkings by country
+GET {{baseUrl}}/api/user/parkings/by-country/1
+Authorization: Bearer {{token}}
+
+### 11. Get parkings by region
+GET {{baseUrl}}/api/user/parkings/by-region/1
+Authorization: Bearer {{token}}
+
+### 12. Check if parking exists
+GET {{baseUrl}}/api/user/parkings/1/exists
+Authorization: Bearer {{token}}
+
+### 13. Assign parking to another region (if you have region ID 2)
+POST {{baseUrl}}/api/user/parkings/1/regions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "regionId": 2,
+  "parkingCode": "PARK001-R2",
+  "metadata": {
+    "assignment_reason": "Expansion to cover multiple regions",
+    "priority": "High"
+  }
+}
+
+### 14. Check if parking is assigned to region
+GET {{baseUrl}}/api/user/parkings/1/regions/2/exists
+Authorization: Bearer {{token}}
+
+### 15. Remove parking from region
+DELETE {{baseUrl}}/api/user/parkings/1/regions/2
+Authorization: Bearer {{token}}
+
+### 16. Try to create parking with duplicate code (should fail)
+POST {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parkingCode": "PARK001",
+  "parkingName": "Another Central Parking",
+  "regionId": 1
+}
+
+### 17. Update parking with invalid data (should fail validation)
+PUT {{baseUrl}}/api/user/parkings/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "latitude": 200,
+  "longitude": 400,
+  "managerEmail": "invalid-email",
+  "parkingSpaces": -10
+}
+
+### 18. Delete the second parking
+DELETE {{baseUrl}}/api/user/parkings/2
+Authorization: Bearer {{token}}
+
+### 19. Verify deleted parking is not in the list
+GET {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+
+### 20. Try to get deleted parking by ID (should return 404)
+GET {{baseUrl}}/api/user/parkings/2
+Authorization: Bearer {{token}}
+
+### Additional Test Cases
+
+### 21. Create parking with maximum field lengths
+POST {{baseUrl}}/api/user/parkings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parkingCode": "PARK003",
+  "parkingName": "Extended Name Parking Facility with Very Long Name",
+  "regionId": 1
+}
+
+### 22. Update with boundary coordinate values
+PUT {{baseUrl}}/api/user/parkings/3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "latitude": 90.0,
+  "longitude": 180.0,
+  "parkingSpaces": 1
+}
+
+### 23. Test empty search query (should fail)
+GET {{baseUrl}}/api/user/parkings/search?query=
+Authorization: Bearer {{token}}
+
+### 24. Test search with special characters
+GET {{baseUrl}}/api/user/parkings/search?query=parking&
+Authorization: Bearer {{token}}
+
+### 25. Get non-existent parking (should return 404)
+GET {{baseUrl}}/api/user/parkings/99999
+Authorization: Bearer {{token}}
+
+### 26. Update non-existent parking (should return 404)
+PUT {{baseUrl}}/api/user/parkings/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "parkingName": "Updated Name"
+}
+
+### 27. Delete non-existent parking (should return 404)
+DELETE {{baseUrl}}/api/user/parkings/99999
+Authorization: Bearer {{token}}
+
+### 28. Test assigning parking to non-existent region (should fail)
+POST {{baseUrl}}/api/user/parkings/1/regions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "regionId": 99999
+}
+
+### Expected Results Summary:
+### 1. Create parking ? Success with ID 1
+### 2. Get all ? Shows created parking
+### 3. Get by ID ? Returns detailed parking info
+### 4. Update ? Success with updated fields and computed latLong
+### 5. Search ? Returns matching parkings
+### 6. Filter endpoints ? Return appropriate subsets
+### 7. Region assignment ? Success with mapping created
+### 8. Duplicate code ? 400 Bad Request error
+### 9. Invalid validation ? 400 Bad Request with validation errors
+### 10. Delete ? 204 No Content, parking soft-deleted
+### 11. Coordinate computation ? latLong field automatically calculated
+### 12. Manager email validation ? Enforced on update
+### 13. Company inheritance ? Automatic from region selection
