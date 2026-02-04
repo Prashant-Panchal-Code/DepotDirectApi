@@ -1,4 +1,11 @@
+using DepotDirectApi.Data;
+using DepotDirectApi.Repositories;
+using DepotDirectApi.Services;
+using Microsoft.EntityFrameworkCore;
 using DepotDirectApi.Extensions;
+using Microsoft.AspNetCore.Authentication;
+using DepotDirectApi.Authentication;
+using DepotDirectApi.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -31,6 +31,22 @@ public class DepotDirectDbContext : DbContext
     public DbSet<Parking> Parkings { get; set; }
     public DbSet<RegionParking> RegionParkings { get; set; }
 
+    // Hauliers
+    public DbSet<Haulier> Hauliers { get; set; }
+
+    // Vehicle Management DbSets
+    public DbSet<BreakRule> BreakRules { get; set; }
+    public DbSet<Driver> Drivers { get; set; }
+    public DbSet<DriverShift> DriverShifts { get; set; }
+    public DbSet<DriverTimeOff> DriverTimeOffs { get; set; }
+    public DbSet<Tractor> Tractors { get; set; }
+    public DbSet<Trailer> Trailers { get; set; }
+    public DbSet<TrailerCompartment> TrailerCompartments { get; set; }
+    public DbSet<CompartmentAllowedProduct> CompartmentAllowedProducts { get; set; }
+    public DbSet<VehicleCombination> VehicleCombinations { get; set; }
+    public DbSet<VehicleCombinationTrailer> VehicleCombinationTrailers { get; set; }
+    public DbSet<TractorSchedule> TractorSchedules { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -496,6 +512,322 @@ public class DepotDirectDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.RegionId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Vehicle Management entities
+        ConfigureHaulier(modelBuilder);
+        ConfigureBreakRule(modelBuilder);
+        ConfigureDriver(modelBuilder);
+        ConfigureDriverShift(modelBuilder);
+        ConfigureDriverTimeOff(modelBuilder);
+        ConfigureTractor(modelBuilder);
+        ConfigureTrailer(modelBuilder);
+        ConfigureTrailerCompartment(modelBuilder);
+        ConfigureCompartmentAllowedProduct(modelBuilder);
+        ConfigureVehicleCombination(modelBuilder);
+        ConfigureVehicleCombinationTrailer(modelBuilder);
+        ConfigureTractorSchedule(modelBuilder);
+    }
+
+    private void ConfigureHaulier(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Haulier>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_hauliers_region");
+            entity.HasIndex(e => new { e.RegionId, e.HaulierCode }).IsUnique().HasDatabaseName("hauliers_code_region_uniq");
+
+            entity.Property(e => e.HaulierCode).IsRequired();
+            entity.Property(e => e.HaulierName).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureBreakRule(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<BreakRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_break_rules_company");
+            entity.HasIndex(e => new { e.CompanyId, e.RuleName }).IsUnique().HasDatabaseName("break_rules_uniq");
+
+            entity.Property(e => e.RuleName).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureDriver(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Driver>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CompanyId).HasDatabaseName("idx_drivers_company");
+            entity.HasIndex(e => e.HomeDepotId).HasDatabaseName("idx_drivers_home_depot");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_drivers_region");
+            entity.HasIndex(e => new { e.CompanyId, e.LicenseNumber }).IsUnique().HasDatabaseName("drivers_license_uniq");
+
+            entity.Property(e => e.DriverCode).IsRequired();
+            entity.Property(e => e.FirstName).IsRequired();
+            entity.Property(e => e.LastName).IsRequired();
+            entity.Property(e => e.LicenseNumber).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.Status).HasDefaultValue("Available");
+            entity.Property(e => e.HazmatCertified).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Company)
+                  .WithMany()
+                  .HasForeignKey(d => d.CompanyId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.HomeDepot)
+                  .WithMany()
+                  .HasForeignKey(d => d.HomeDepotId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.BreakRule)
+                  .WithMany(p => p.Drivers)
+                  .HasForeignKey(d => d.BreakRuleId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private void ConfigureDriverShift(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DriverShift>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DriverId).HasDatabaseName("idx_driver_shifts_driver");
+            entity.HasIndex(e => new { e.DriverId, e.DayOfWeek, e.StartTime }).IsUnique();
+
+            entity.Property(e => e.Active).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Driver)
+                  .WithMany(p => p.DriverShifts)
+                  .HasForeignKey(d => d.DriverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.StartDepot)
+                  .WithMany()
+                  .HasForeignKey(d => d.StartDepotId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private void ConfigureDriverTimeOff(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DriverTimeOff>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DriverId).HasDatabaseName("idx_driver_time_off_driver");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Driver)
+                  .WithMany(p => p.DriverTimeOffs)
+                  .HasForeignKey(d => d.DriverId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureTractor(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tractor>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.HaulierId).HasDatabaseName("idx_tractors_haulier");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_tractors_region");
+            entity.HasIndex(e => new { e.HaulierId, e.TractorCode }).IsUnique().HasDatabaseName("tractors_code_uniq");
+
+            entity.Property(e => e.TractorCode).IsRequired();
+            entity.Property(e => e.TractorName).IsRequired();
+            entity.Property(e => e.LicensePlate).IsRequired();
+            entity.Property(e => e.Status).HasDefaultValue("Active");
+            entity.Property(e => e.PumpAvailable).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Haulier)
+                  .WithMany(h => h.Tractors)
+                  .HasForeignKey(d => d.HaulierId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private void ConfigureTrailer(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Trailer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.HaulierId).HasDatabaseName("idx_trailers_haulier");
+            entity.HasIndex(e => e.RegionId).HasDatabaseName("idx_trailers_region");
+            entity.HasIndex(e => new { e.HaulierId, e.TrailerCode }).IsUnique().HasDatabaseName("trailers_code_uniq");
+
+            entity.Property(e => e.TrailerCode).IsRequired();
+            entity.Property(e => e.TrailerName).IsRequired();
+            entity.Property(e => e.LicensePlate).IsRequired();
+            entity.Property(e => e.Status).HasDefaultValue("Active");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Haulier)
+                  .WithMany(h => h.Trailers)
+                  .HasForeignKey(d => d.HaulierId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Region)
+                  .WithMany()
+                  .HasForeignKey(d => d.RegionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private void ConfigureTrailerCompartment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TrailerCompartment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TrailerId).HasDatabaseName("idx_trailer_compartments_trailer");
+            entity.HasIndex(e => new { e.TrailerId, e.CompartmentNumber }).IsUnique();
+
+            entity.Property(e => e.MustUse).HasDefaultValue(false);
+            entity.Property(e => e.PartialLoadAllowed).HasDefaultValue(true);
+            entity.Property(e => e.MinVolumeL).HasDefaultValue(0m);  // Fixed: Changed from 0 to 0m for decimal
+
+            entity.HasOne(d => d.Trailer)
+                  .WithMany(p => p.TrailerCompartments)
+                  .HasForeignKey(d => d.TrailerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureCompartmentAllowedProduct(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CompartmentAllowedProduct>(entity =>
+        {
+            entity.HasKey(e => new { e.CompartmentId, e.ProductId });
+
+            entity.HasOne(d => d.Compartment)
+                  .WithMany(p => p.CompartmentAllowedProducts)
+                  .HasForeignKey(d => d.CompartmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Product)
+                  .WithMany()
+                  .HasForeignKey(d => d.ProductId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureVehicleCombination(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VehicleCombination>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TractorId).HasDatabaseName("idx_vehicle_combinations_tractor");
+            entity.HasIndex(e => new { e.TractorId, e.CombinationCode }).IsUnique();
+
+            entity.Property(e => e.CombinationCode).IsRequired();
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.IsDefault).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Tractor)
+                  .WithMany(p => p.VehicleCombinations)
+                  .HasForeignKey(d => d.TractorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureVehicleCombinationTrailer(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VehicleCombinationTrailer>(entity =>
+        {
+            entity.HasKey(e => new { e.CombinationId, e.TrailerId });
+
+            entity.Property(e => e.SequenceNumber).HasDefaultValue(1);
+
+            entity.HasOne(d => d.VehicleCombination)
+                  .WithMany(p => p.VehicleCombinationTrailers)
+                  .HasForeignKey(d => d.CombinationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Trailer)
+                  .WithMany(p => p.VehicleCombinationTrailers)
+                  .HasForeignKey(d => d.TrailerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureTractorSchedule(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TractorSchedule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TractorId).HasDatabaseName("idx_tractor_schedules_tractor");
+            entity.HasIndex(e => e.DriverId).HasDatabaseName("idx_tractor_schedules_driver");
+            entity.HasIndex(e => new { e.DayOfWeek, e.ShiftStartTime, e.ShiftEndTime }).HasDatabaseName("idx_tractor_schedules_search");
+
+            entity.Property(e => e.IsOvertime).HasDefaultValue(false);
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.Tractor)
+                  .WithMany(p => p.TractorSchedules)
+                  .HasForeignKey(d => d.TractorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Driver)
+                  .WithMany(p => p.TractorSchedules)
+                  .HasForeignKey(d => d.DriverId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.StartDepot)
+                  .WithMany()
+                  .HasForeignKey(d => d.StartDepotId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.StartParking)
+                  .WithMany()
+                  .HasForeignKey(d => d.StartParkingId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.EndDepot)
+                  .WithMany()
+                  .HasForeignKey(d => d.EndDepotId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.EndParking)
+                  .WithMany()
+                  .HasForeignKey(d => d.EndParkingId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

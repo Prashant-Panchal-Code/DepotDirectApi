@@ -33,6 +33,20 @@ public static class ServiceExtensions
         // Tanks
         services.AddScoped<ITankRepository, TankRepository>();
         
+        // Vehicle Management Repositories
+        services.AddScoped<IHaulierRepository, HaulierRepository>();
+        services.AddScoped<IBreakRuleRepository, BreakRuleRepository>();
+        services.AddScoped<ITractorRepository, TractorRepository>();
+        services.AddScoped<ITrailerRepository, TrailerRepository>();
+        services.AddScoped<IVehicleCombinationRepository, VehicleCombinationRepository>();
+        services.AddScoped<ITractorScheduleRepository, TractorScheduleRepository>();
+        
+        // TODO: Implement remaining repositories when needed:
+        // services.AddScoped<IDriverRepository, DriverRepository>();
+        // services.AddScoped<IDriverShiftRepository, DriverShiftRepository>();
+        // services.AddScoped<IDriverTimeOffRepository, DriverTimeOffRepository>();
+        // services.AddScoped<ITrailerCompartmentRepository, TrailerCompartmentRepository>();
+
         return services;
     }
 
